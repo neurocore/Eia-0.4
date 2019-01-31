@@ -1,10 +1,13 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-#include <assert.h>
+#include <cassert>
+#include <iostream>
 
 typedef unsigned char uchar;
 typedef unsigned long long U64;
+
+using namespace std;
 
 #define MAX_MOVES  256
 #define MAX_PLY    128
@@ -13,11 +16,11 @@ typedef unsigned long long U64;
 
 #define LSB(x)     ( (x) & (EMPTY - (x)) )
 #define MSB(x)     ( (x) |= (x) >> 1,    \
-					 (x) |= (x) >> 2,    \
-					 (x) |= (x) >> 4,    \
-					 (x) |= (x) >> 8,    \
-					 (x) |= (x) >> 16,   \
-					 ((x) >> 1) + 1      )
+                     (x) |= (x) >> 2,    \
+                     (x) |= (x) >> 4,    \
+                     (x) |= (x) >> 8,    \
+                     (x) |= (x) >> 16,   \
+                     ((x) >> 1) + 1      )
 
 #define RLSB(x)    ( (x) = (x) & ((x) - 1) )
 
@@ -42,10 +45,26 @@ typedef unsigned long long U64;
 
 #define ASSERT(x)  { if (!(x)) { S->board->print(); }; assert(x); }
 
+#ifdef LOGGING
+#define LOG(s)     { S->flog << s << endl << flush; }
+#else              
+#define LOG(s)     {}
+#endif             
+
+#define OUT(s)     { cout << s; LOG(s); }
+#define INP(s)     { LOG(">> " << s << "\n"); }
+#define FLUSH      { cout << flush; }
+
+#ifdef PRODUCTION  
+#define CON(s)     {}
+#else              
+#define CON(s)     { if (console) cout << s; }
+#endif
+
 enum Move      { MOVE_NONE = SQ(0, 0), MOVE_NULL = SQ(1, 1) };
 enum Color     { WHITE, BLACK, COLOR_N };
-enum Piece     { BP, WP, BN, WN, BB, WB, BR, WR, BQ, WQ, BK, WK, NOP };
-enum PieceType { PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING };
+enum Piece     { BP, WP, BN, WN, BB, WB, BR, WR, BQ, WQ, BK, WK, PIECE_N, NOP = 13 };
+enum PieceType { PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING, PIECE_TYPE_N };
 
 // Macro for automatic enums creation //////////////////
 
@@ -73,7 +92,7 @@ _(A8) _(B8) _(C8) _(D8) _(E8) _(F8) _(G8) _(H8)
 #define FILE_F    L(0x2020202020202020)
 #define FILE_G    L(0x4040404040404040)
 #define FILE_H    L(0x8080808080808080)
-			      
+                  
 #define RANK_1    L(0x00000000000000FF)
 #define RANK_2    L(0x000000000000FF00)
 #define RANK_3    L(0x0000000000FF0000)
@@ -101,5 +120,7 @@ SQUARES
                   
 #define MB        (1 << 20)
 
+extern bool console;
 
+    
 #endif // TYPES_H
