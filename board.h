@@ -9,24 +9,24 @@ using namespace std;
 struct Search;
 struct Board
 {
-	U64 piece[12];
-	U64 occ[2];
+    U64 piece[12];
+    U64 occ[2];
     int sq[64];
-	int wtm;
+    int wtm;
 
-	//Board();
-	void clear();
-	void print();
-	void reset(Search * S);
-	void fromFen(const char * fen, Search * S);
-	string makeFen(Search * S);
+    //Board();
+    void clear();
+    void print();
+    void reset(Search * S);
+    void fromFen(const char * fen, Search * S);
+    string makeFen(Search * S);
 
-	bool isAttacked(int ksq, U64 occupied, U64 captured);
-	bool isPinned(int ksq, U64 occupied, U64 captured, U64 & att);
-	int  cntAttacks(int ksq, U64 occupied, U64 captured, U64 & att);
-	U64  getAttacksXray(int sq, U64 occupied, int col = 2);
-	bool inCheck();
-	int  see(Move move);
+    bool isAttacked(int ksq, U64 occupied, U64 captured);
+    bool isPinned(int ksq, U64 occupied, U64 captured, U64 & att);
+    int  cntAttacks(int ksq, U64 occupied, U64 captured, U64 & att);
+    U64  getAttacksXray(int sq, U64 occupied, int col = 2);
+    bool inCheck();
+    int  see(Move move);
     bool insufficientMaterial();
 
     /*template<bool full = true>
