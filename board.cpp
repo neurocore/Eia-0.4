@@ -9,9 +9,9 @@ void Board::clear()
     for (int i = 0; i < SQUARE_N; i++) sq[i] = NOP;
 }
 
-void Board::reset(Search * S)
+void Board::reset()
 {
-    fromFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", S);
+    fromFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 }
 
 void Board::print()
@@ -53,21 +53,28 @@ void Board::print()
 }
 
 struct Node {};
-struct Eval {};
+struct Eval
+{
+    int pst[PIECE_N][SQUARE_N];
+};
 
-#define SET_PIECE(s, p) { piece[p] |= (BIT << (s)); \
-                          this->sq[s] = p;            \
-                                                    }
-                          //N->mat += EV->mat[p];        \
-                          //N->pst += EV->pst[p][s]; 
+struct Search
+{
+    Eval * eval;
+};
 
-void Board::fromFen(const char * fen, Search * S)
+Search S[1];
+
+#define SET_PIECE(s, p) { piece[p] |= (BIT << (s));  \
+                          this->sq[s] = p;           \
+                                                     }
+                          //state.pst += E->pst[p][s]; \
+
+void Board::fromFen(const char * fen)
 {
     clear();
-    /*Node * N = S->node;
-    Eval * EV = S->eval;*/
-    //N->mat = 0;
-    //N->pst.clear();
+    //Eval * E = S->eval;
+    state.pst = 0;
     int i = 0, sq = A8;
 
     while (char ch = fen[i++])
@@ -117,62 +124,61 @@ void Board::fromFen(const char * fen, Search * S)
     }
 
     // Castling rights
-    /*N->castling = 0;
+    state.castling = 0;
     while (fen[i] == ' ') i++;
     while (char ch = fen[i++])
     {
         if (ch == '-' || ch == ' ') break;
-        if (ch == 'k') N->castling |= C_BK;
-        if (ch == 'q') N->castling |= C_BQ;
-        if (ch == 'K') N->castling |= C_WK;
-        if (ch == 'Q') N->castling |= C_WQ;
-    }*/
+        if (ch == 'k') state.castling |= C_BK;
+        if (ch == 'q') state.castling |= C_BQ;
+        if (ch == 'K') state.castling |= C_WK;
+        if (ch == 'Q') state.castling |= C_WQ;
+    }
 
     // En passant target square
-    /*N->ep = 0;
+    state.ep = 0;
     while (fen[i] == ' ') i++;
     while (char ch = fen[i++])
     {
         if (ch == '-' || ch == ' ') break;
-        if (ch >= 'a' && ch <= 'h') N->ep += SQ(ch - 'a', 0);
-        if (ch >= 'A' && ch <= 'H') N->ep += SQ(ch - 'A', 0);
-        if (ch == '3' || ch == '6') N->ep += SQ(0, ch - '1');
+        if (ch >= 'a' && ch <= 'h') state.ep += SQ(ch - 'a', 0);
+        if (ch >= 'A' && ch <= 'H') state.ep += SQ(ch - 'A', 0);
+        if (ch == '3' || ch == '6') state.ep += SQ(0, ch - '1');
     }
-    if (Y(N->ep) != 2 && Y(N->ep) != 5) N->ep = 0;*/
+    if (Y(state.ep) != 2 && Y(state.ep) != 5) state.ep = 0;
 
     // Halfmove clock
-    /*N->fifty = 0;
+    state.fifty = 0;
     while (fen[i] == ' ') i++;
     while (char ch = fen[i++])
     {
         if (ch == ' ') break;
         if (ch >= '0' && ch <= '9')
         {
-            N->fifty *= 10;
-            N->fifty += ch - '0';
-        }
-    }*/
-
-    // Full move counter
-   /* S->movecnt = 0;
-    while (fen[i] == ' ') i++;
-    while (char ch = fen[i++])
-    {
-        if (ch == ' ') break;
-        if (ch >= '0' && ch <= '9')
-        {
-            S->movecnt *= 10;
-            S->movecnt += ch - '0';
+            state.fifty *= 10;
+            state.fifty += ch - '0';
         }
     }
 
-    S->movecnt *= 2;
-    S->movecnt -= wtm;
-    S->movecnt--;*/
+    // Full move counter -> TODO
+    int movecnt = 0;
+    while (fen[i] == ' ') i++;
+    while (char ch = fen[i++])
+    {
+        if (ch == ' ') break;
+        if (ch >= '0' && ch <= '9')
+        {
+            movecnt *= 10;
+            movecnt += ch - '0';
+        }
+    }
+    movecnt *= 2;
+    movecnt -= wtm;
+    movecnt--;
 
     // Occupied
     occ[0] = occ[1] = EMPTY;
-    for (int i = BP; i < NOP; i += 2)
+    for (int i = BP; i < PIECE_N; i += 2)
     {
         occ[0] |= piece[i];
         occ[1] |= piece[i + 1];

@@ -8,11 +8,11 @@ bool console = true;
 
 int main()
 {
-    Search * S = new Search;
-    Board B;
-    B.reset(S);
-    B.print();
+    OUT("Eia v0.4 chess engine by Nick Kurgin 2019\n\n");
 
+    Board B;
+    B.reset();
+    B.print();
 
     system("pause");
     return 0;

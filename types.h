@@ -112,6 +112,14 @@ _(A8) _(B8) _(C8) _(D8) _(E8) _(F8) _(G8) _(H8)
 #define RANK_7    L(0x00FF000000000000)
 #define RANK_8    L(0xFF00000000000000)
 
+// Castlings ///////////////////////////////////////////
+
+#define C_BK      (1 << 0)
+#define C_BQ      (1 << 1)
+#define C_WK      (1 << 2)
+#define C_WQ      (1 << 3)
+#define C_ALL     (C_BK | C_BQ | C_WK | C_WQ)
+
 // Squares /////////////////////////////////////////////
 
 #define _(x) x,
