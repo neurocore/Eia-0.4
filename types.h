@@ -33,6 +33,7 @@ using namespace std;
 #define MIN(x,y)   ( (x) < (y) ? (x) : (y) )
 #define ABS(x)     ( (x) > 0 ? (x) : -(x) )
 #define SIGN(x)    ( (x) == 0 ? 0 : ( (x) > 0 ? 1 : -1 ) )
+#define NOTZERO(x) ( ((x) == 0) ? 1 : (x) )
 
 #define SQ_OUT(sq)  FILES[X(sq)] << RANKS[Y(sq)]
 
@@ -42,6 +43,15 @@ using namespace std;
 
 #define FILE(x)    ( L(0x0101010101010101) << (x) )
 #define RANK(x)    ( L(0x00000000000000FF) << (x * 8) )
+
+#define SHIFT__U(b) (  (b) << 8 )
+#define SHIFT__D(b) (  (b) >> 8 )
+#define SHIFT__R(b) ( ((b) & ~FILE_H) << 1 )
+#define SHIFT__L(b) ( ((b) & ~FILE_A) >> 1 )
+#define SHIFT_UR(b) ( ((b) & LL(0x00fefefefefefefe)) << 7 )
+#define SHIFT_UL(b) ( ((b) & LL(0x007f7f7f7f7f7f7f)) << 9 )
+#define SHIFT_DR(b) ( ((b) & LL(0xfefefefefefefe00)) >> 9 )
+#define SHIFT_DL(b) ( ((b) & LL(0x7f7f7f7f7f7f7f00)) >> 7 )
 
 #define ASSERT(x)  { if (!(x)) { S->board->print(); }; assert(x); }
 
