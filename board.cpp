@@ -52,19 +52,6 @@ void Board::print()
     CON(" +--------\n  " << FILES << "\n\n");
 }
 
-struct Node {};
-struct Eval
-{
-    int pst[PIECE_N][SQUARE_N];
-};
-
-struct Search
-{
-    Eval * eval;
-};
-
-Search S[1];
-
 #define SET_PIECE(s, p) { piece[p] |= (BIT << (s));  \
                           this->sq[s] = p;           \
                                                      }
