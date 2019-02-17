@@ -206,26 +206,39 @@ U64 indexTo64(int index, int bits, U64 mask)
 	return result;
 }
 
+U64 trace(U64 bb, Dir dir, U64 mask = FULL)
+{
+    U64 result = EMPTY;
+    for (bb = shift(bb, dir) & mask; bb; bb = shift(bb, dir) & mask)
+        result |= bb;
+    return result;
+}
+
+U64 tracePre(U64 bb, Dir dir)
+{
+    U64 result = EMPTY;
+    U64 temp = EMPTY;
+
+    for (bb = shift(bb, dir); bb; bb = shift(bb, dir))
+    {
+        result |= temp;
+        temp = bb;
+    }
+    return result;
+}
+
 U64 rmask(int sq)
 {
-	U64 result = EMPTY;
-	int rk = sq/8, fl = sq%8, r, f;
-	for (r = rk+1; r <= 6; r++) result |= (BIT << (fl + r*8));
-	for (r = rk-1; r >= 1; r--) result |= (BIT << (fl + r*8));
-	for (f = fl+1; f <= 6; f++) result |= (BIT << (f + rk*8));
-	for (f = fl-1; f >= 1; f--) result |= (BIT << (f + rk*8));
-	return result;
+    U64 bb = BIT << sq;
+	return tracePre(bb, DIR__L) | tracePre(bb, DIR__R)
+         | tracePre(bb, DIR__U) | tracePre(bb, DIR__D);
 }
  
 U64 bmask(int sq)
 {
-	U64 result = EMPTY;
-	int rk = sq/8, fl = sq%8, r, f;
-	for (r=rk+1, f=fl+1; r<=6 && f<=6; r++, f++) result |= (BIT << (f + r*8));
-	for (r=rk+1, f=fl-1; r<=6 && f>=1; r++, f--) result |= (BIT << (f + r*8));
-	for (r=rk-1, f=fl+1; r>=1 && f<=6; r--, f++) result |= (BIT << (f + r*8));
-	for (r=rk-1, f=fl-1; r>=1 && f>=1; r--, f--) result |= (BIT << (f + r*8));
-	return result;
+    U64 bb = BIT << sq;
+	return tracePre(bb, DIR_UR) | tracePre(bb, DIR_UL)
+         | tracePre(bb, DIR_DR) | tracePre(bb, DIR_DL);
 }
  
 U64 ratt(int sq, U64 block)
@@ -234,23 +247,23 @@ U64 ratt(int sq, U64 block)
 	int rk = sq/8, fl = sq%8, r, f;
 	for (r = rk+1; r <= 7; r++)
 	{
-		result |= (1ULL << (fl + r*8));
-		if (block & (1ULL << (fl + r*8))) break;
+		result |= BIT << (fl + r*8);
+		if (block & (BIT << (fl + r*8))) break;
 	}
 	for (r = rk-1; r >= 0; r--)
 	{
-		result |= (1ULL << (fl + r*8));
-		if (block & (1ULL << (fl + r*8))) break;
+		result |= BIT << (fl + r*8);
+		if (block & (BIT << (fl + r*8))) break;
 	}
 	for (f = fl+1; f <= 7; f++)
 	{
-		result |= (1ULL << (f + rk*8));
-		if (block & (1ULL << (f + rk*8))) break;
+		result |= BIT << (f + rk*8);
+		if (block & (BIT << (f + rk*8))) break;
 	}
 	for (f = fl-1; f >= 0; f--)
 	{
-		result |= (1ULL << (f + rk*8));
-		if (block & (1ULL << (f + rk*8))) break;
+		result |= BIT << (f + rk*8);
+		if (block & (BIT << (f + rk*8))) break;
 	}
 	return result;
 }
@@ -261,23 +274,23 @@ U64 batt(int sq, U64 block)
 	int rk = sq/8, fl = sq%8, r, f;
 	for (r = rk+1, f = fl+1; r <= 7 && f <= 7; r++, f++)
 	{
-		result |= (1ULL << (f + r*8));
-		if (block & (1ULL << (f + r * 8))) break;
+		result |= (BIT << (f + r*8));
+		if (block & (BIT << (f + r * 8))) break;
 	}
 	for (r = rk+1, f = fl-1; r <= 7 && f >= 0; r++, f--)
 	{
-		result |= (1ULL << (f + r*8));
-		if (block & (1ULL << (f + r * 8))) break;
+		result |= (BIT << (f + r*8));
+		if (block & (BIT << (f + r * 8))) break;
 	}
 	for (r = rk-1, f = fl+1; r >= 0 && f <= 7; r--, f++)
 	{
-		result |= (1ULL << (f + r*8));
-		if (block & (1ULL << (f + r * 8))) break;
+		result |= (BIT << (f + r*8));
+		if (block & (BIT << (f + r * 8))) break;
 	}
 	for (r = rk-1, f = fl-1; r >= 0 && f >= 0; r--, f--)
 	{
-		result |= (1ULL << (f + r*8));
-		if (block & (1ULL << (f + r * 8))) break;
+		result |= (BIT << (f + r*8));
+		if (block & (BIT << (f + r * 8))) break;
 	}
 	return result;
 }

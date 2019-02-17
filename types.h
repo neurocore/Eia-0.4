@@ -48,10 +48,10 @@ using namespace std;
 #define SHIFT__D(b) (  (b) >> 8 )
 #define SHIFT__R(b) ( ((b) & ~FILE_H) << 1 )
 #define SHIFT__L(b) ( ((b) & ~FILE_A) >> 1 )
-#define SHIFT_UR(b) ( ((b) & LL(0x00fefefefefefefe)) << 7 )
-#define SHIFT_UL(b) ( ((b) & LL(0x007f7f7f7f7f7f7f)) << 9 )
-#define SHIFT_DR(b) ( ((b) & LL(0xfefefefefefefe00)) >> 9 )
-#define SHIFT_DL(b) ( ((b) & LL(0x7f7f7f7f7f7f7f00)) >> 7 )
+#define SHIFT_UR(b) ( ((b) & L(0x00fefefefefefefe)) << 7 )
+#define SHIFT_UL(b) ( ((b) & L(0x007f7f7f7f7f7f7f)) << 9 )
+#define SHIFT_DR(b) ( ((b) & L(0xfefefefefefefe00)) >> 9 )
+#define SHIFT_DL(b) ( ((b) & L(0x7f7f7f7f7f7f7f00)) >> 7 )
 
 #define ASSERT(x)  { if (!(x)) { S->board->print(); }; assert(x); }
 
@@ -111,6 +111,26 @@ _(A8) _(B8) _(C8) _(D8) _(E8) _(F8) _(G8) _(H8)
 #define RANK_6    L(0x0000FF0000000000)
 #define RANK_7    L(0x00FF000000000000)
 #define RANK_8    L(0xFF00000000000000)
+
+// Directions and shifts ///////////////////////////////
+
+enum Dir { DIR__U, DIR__D, DIR__L, DIR__R,
+           DIR_UR, DIR_UL, DIR_DR, DIR_DL };
+
+static U64 shift(U64 bb, Dir dir)
+{
+    switch (dir)
+    {
+        case DIR__U: return SHIFT__U(bb);
+        case DIR__D: return SHIFT__D(bb);
+        case DIR__L: return SHIFT__L(bb);
+        case DIR__R: return SHIFT__R(bb);
+        case DIR_UR: return SHIFT_UR(bb);
+        case DIR_UL: return SHIFT_UL(bb);
+        case DIR_DR: return SHIFT_DR(bb);
+        case DIR_DL: return SHIFT_DL(bb);
+    }
+}
 
 // Castlings ///////////////////////////////////////////
 

@@ -27,6 +27,7 @@ int main()
 
     U64 occ = B.occ[0] | B.occ[1];
     print64(RATT(E4, occ));
+    print64(RATT(A4, occ));
     print64(BATT(E4, occ));
 
     system("pause");
