@@ -65,41 +65,41 @@ void Board::fromFen(const char * fen)
     clear();
     //Eval * E = S->eval;
     state.pst = 0;
-    int i = 0, sq = A8;
+    int i = 0, square = A8;
 
     while (char ch = fen[i++])
     {
         bool shift = true;
         switch(ch)
         {
-            case 'p': SET_PIECE(sq, BP); break;
-            case 'P': SET_PIECE(sq, WP); break;
-            case 'n': SET_PIECE(sq, BN); break;
-            case 'N': SET_PIECE(sq, WN); break;
-            case 'b': SET_PIECE(sq, BB); break;
-            case 'B': SET_PIECE(sq, WB); break;
-            case 'r': SET_PIECE(sq, BR); break;
-            case 'R': SET_PIECE(sq, WR); break;
-            case 'q': SET_PIECE(sq, BQ); break;
-            case 'Q': SET_PIECE(sq, WQ); break;
-            case 'k': SET_PIECE(sq, BK); break;
-            case 'K': SET_PIECE(sq, WK); break;
+            case 'p': SET_PIECE(square, BP); break;
+            case 'P': SET_PIECE(square, WP); break;
+            case 'n': SET_PIECE(square, BN); break;
+            case 'N': SET_PIECE(square, WN); break;
+            case 'b': SET_PIECE(square, BB); break;
+            case 'B': SET_PIECE(square, WB); break;
+            case 'r': SET_PIECE(square, BR); break;
+            case 'R': SET_PIECE(square, WR); break;
+            case 'q': SET_PIECE(square, BQ); break;
+            case 'Q': SET_PIECE(square, WQ); break;
+            case 'k': SET_PIECE(square, BK); break;
+            case 'K': SET_PIECE(square, WK); break;
 
             case '/': continue;
-            case ' ': sq = -1; break;
+            case ' ': square = -1; break;
 
             default:
 
                 shift = false;
-                if (ch > '0' && ch < '9') sq += ch - '0';
+                if (ch > '0' && ch < '9') square += ch - '0';
         }
 
-        if (shift) sq++;
+        if (shift) square++;
 
-        if (!(sq & 7)) // End of row
+        if (!(square & 7)) // End of row
         {
-            sq -= 16;
-            if (sq < 0) break;
+            square -= 16;
+            if (square < 0) break;
         }
     }
 

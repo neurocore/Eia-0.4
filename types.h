@@ -42,7 +42,7 @@ using namespace std;
 #define COL(p)     ( (p) & 1 )
 
 #define FILE(x)    ( L(0x0101010101010101) << (x) )
-#define RANK(x)    ( L(0x00000000000000FF) << (x * 8) )
+#define RANK(x)    ( L(0x00000000000000FF) << ((x) * 8) )
 
 #define SHIFT__U(b) (  (b) << 8 )
 #define SHIFT__D(b) (  (b) >> 8 )
