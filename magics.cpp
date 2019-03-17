@@ -209,11 +209,14 @@ U64 indexTo64(int index, int bits, U64 mask)
 	return result;
 }
 
-U64 trace(U64 bb, Dir dir, U64 mask = FULL)
+U64 trace(U64 bb, Dir dir, U64 block = EMPTY)
 {
     U64 result = EMPTY;
-    for (bb = shift(bb, dir) & mask; bb; bb = shift(bb, dir) & mask)
+    for (bb = shift(bb, dir); bb; bb = shift(bb, dir))
+    {
         result |= bb;
+        if (bb & block) break;
+    }
     return result;
 }
 
@@ -243,61 +246,21 @@ U64 bmask(int sq)
 	return tracePre(bb, DIR_UR) | tracePre(bb, DIR_UL)
          | tracePre(bb, DIR_DR) | tracePre(bb, DIR_DL);
 }
- 
+
 U64 ratt(int sq, U64 block)
 {
-	U64 result = EMPTY;
-	int rk = sq/8, fl = sq%8, r, f;
-	for (r = rk+1; r <= 7; r++)
-	{
-		result |= BIT << (fl + r*8);
-		if (block & (BIT << (fl + r*8))) break;
-	}
-	for (r = rk-1; r >= 0; r--)
-	{
-		result |= BIT << (fl + r*8);
-		if (block & (BIT << (fl + r*8))) break;
-	}
-	for (f = fl+1; f <= 7; f++)
-	{
-		result |= BIT << (f + rk*8);
-		if (block & (BIT << (f + rk*8))) break;
-	}
-	for (f = fl-1; f >= 0; f--)
-	{
-		result |= BIT << (f + rk*8);
-		if (block & (BIT << (f + rk*8))) break;
-	}
-	return result;
-}
- 
-U64 batt(int sq, U64 block)
-{
-	U64 result = EMPTY;
-	int rk = sq/8, fl = sq%8, r, f;
-	for (r = rk+1, f = fl+1; r <= 7 && f <= 7; r++, f++)
-	{
-		result |= (BIT << (f + r*8));
-		if (block & (BIT << (f + r * 8))) break;
-	}
-	for (r = rk+1, f = fl-1; r <= 7 && f >= 0; r++, f--)
-	{
-		result |= (BIT << (f + r*8));
-		if (block & (BIT << (f + r * 8))) break;
-	}
-	for (r = rk-1, f = fl+1; r >= 0 && f <= 7; r--, f++)
-	{
-		result |= (BIT << (f + r*8));
-		if (block & (BIT << (f + r * 8))) break;
-	}
-	for (r = rk-1, f = fl-1; r >= 0 && f >= 0; r--, f--)
-	{
-		result |= (BIT << (f + r*8));
-		if (block & (BIT << (f + r * 8))) break;
-	}
-	return result;
+    U64 bb = BIT << sq;
+	return trace(bb, DIR__L, block) | trace(bb, DIR__R, block)
+         | trace(bb, DIR__U, block) | trace(bb, DIR__D, block);
 }
 
+U64 batt(int sq, U64 block)
+{
+    U64 bb = BIT << sq;
+	return trace(bb, DIR_UR, block) | trace(bb, DIR_UL, block)
+         | trace(bb, DIR_DR, block) | trace(bb, DIR_DL, block);
+}
+ 
 int transform(U64 b, U64 magic, int bits)
 {
 	return (int)((b * magic) >> (64 - bits));
