@@ -69,7 +69,6 @@ using namespace std;
 #define CON(s)     { if (console) cout << s; }
 #endif
 
-enum Move      { MOVE_NONE = SQ(0, 0), MOVE_NULL = SQ(1, 1) };
 enum Color     { WHITE, BLACK, COLOR_N };
 enum Piece     { BP, WP, BN, WN, BB, WB, BR, WR, BQ, WQ, BK, WK, PIECE_N, NOP = 13 };
 enum PieceType { PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING, PIECE_TYPE_N };
@@ -147,6 +146,50 @@ enum Square { SQUARES SQUARE_N };
 #define _(x) constexpr U64 s##x = (BIT >> x);
 SQUARES
 #undef _(x)
+
+// Moves ///////////////////////////////////////////////
+
+enum Flags
+{
+	F_QUIET,     // PC12 (Promotion, Capture, ...)
+	F_PAWN2,
+	F_KCASTLE,   // 0010
+	F_QCASTLE,   // 0011
+	F_CAP,       // 0100
+	F_EP,	     // 0101
+	F_NPROM = 8, // 1000
+	F_BPROM,     // 1001
+	F_RPROM,     // 1010
+	F_QPROM,     // 1011
+	F_NCAPPROM,  // 1100
+	F_BCAPPROM,  // 1101
+	F_RCAPPROM,  // 1110
+	F_QCAPPROM   // 1111
+};
+
+// Move type - 16 bits. It's compact enough to be stored in hash table and extract values
+
+#define MOVE(from, to, flags)   ( Move((from) | ((to) << 6) | ((flags) << 12)) )
+#define FLAGS(move)             ( (move) >> 12 )
+#define FROM(move)              ( (move) & 077 )
+#define TO(move)                (((move) >> 6) & 077 )
+
+enum Move
+{
+    MOVE_NONE = MOVE(0, 0, 0),
+    MOVE_NULL = MOVE(1, 1, 0)
+};
+
+#define IS_EMPTY(move)          ( (move) == MOVE_NONE )
+#define IS_VALID(move)          ( (move) != MOVE_NONE && (move) != MOVE_NULL )
+
+#define IS_CAP(flags)           ( (flags) & F_CAP )
+#define IS_PROM(flags)          ( (flags) & F_NPROM )
+#define IS_CAP_OR_PROM(flags)   ( (flags) & F_NCAPPROM )
+#define IS_EP(flags)            ( (flags) == F_EP )
+#define IS_PAWN2(flags)         ( (flags) == F_PAWN2 )
+#define IS_CASTLE(flags)        ( (flags) == F_KCASTLE || (flags) == F_QCASTLE )
+#define N_PROM(flags)           ( (flags) & 3 )
 
 // Other ///////////////////////////////////////////////
 
