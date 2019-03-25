@@ -21,7 +21,7 @@ struct Magic
 // Prototypes //////////////////
 
 extern int transform(U64 b, U64 magic, int bits);
-extern int initMagics();
+extern int init_magics();
 
 // Variables ///////////////////
 

@@ -178,23 +178,23 @@ Magic rMagic[64];
 
 // Prototypes //////////////////
 
-U64 rand64Few();
-U64 indexTo64(int index, int bits, U64 mask);
+U64 rand64_few();
+U64 index_to_64(int index, int bits, U64 mask);
 U64 rmask(int sq);
 U64 bmask(int sq);
 U64 ratt(int sq, U64 block);
 U64 batt(int sq, U64 block);
-U64 findMagic(int sq, int m, int bishop);
-void buildMagics();
+U64 find_magic(int sq, int m, int bishop);
+void build_magics();
 
 ////////////////////////////////
 
-U64 rand64Few()
+U64 rand64_few()
 {
 	return rand64() & rand64() & rand64();
 }
 
-U64 indexTo64(int index, int bits, U64 mask)
+U64 index_to_64(int index, int bits, U64 mask)
 {
 	U64 result = EMPTY;
 	for (int i = 0; i < bits; i++)
@@ -217,7 +217,7 @@ U64 trace(U64 bb, Dir dir, U64 block = EMPTY)
     return result;
 }
 
-U64 tracePre(U64 bb, Dir dir)
+U64 trace_pre(U64 bb, Dir dir)
 {
     U64 result = EMPTY;
     U64 temp = EMPTY;
@@ -233,15 +233,15 @@ U64 tracePre(U64 bb, Dir dir)
 U64 rmask(int sq)
 {
     U64 bb = BIT << sq;
-	return tracePre(bb, DIR__L) | tracePre(bb, DIR__R)
-         | tracePre(bb, DIR__U) | tracePre(bb, DIR__D);
+	return trace_pre(bb, DIR__L) | trace_pre(bb, DIR__R)
+         | trace_pre(bb, DIR__U) | trace_pre(bb, DIR__D);
 }
  
 U64 bmask(int sq)
 {
     U64 bb = BIT << sq;
-	return tracePre(bb, DIR_UR) | tracePre(bb, DIR_UL)
-         | tracePre(bb, DIR_DR) | tracePre(bb, DIR_DL);
+	return trace_pre(bb, DIR_UR) | trace_pre(bb, DIR_UL)
+         | trace_pre(bb, DIR_DR) | trace_pre(bb, DIR_DL);
 }
 
 U64 ratt(int sq, U64 block)
@@ -263,7 +263,7 @@ int transform(U64 b, U64 magic, int bits)
 	return (int)((b * magic) >> (64 - bits));
 }
 
-U64 findMagic(int sq, int bits, int bishop)
+U64 find_magic(int sq, int bits, int bishop)
 {
 	U64 magic;
 	U64 blocks[4096], atts[4096], used[4096];
@@ -271,14 +271,14 @@ U64 findMagic(int sq, int bits, int bishop)
  
 	for (int i = 0; i < (1 << bits); i++)
 	{
-		blocks[i] = indexTo64(i, bits, mask);
+		blocks[i] = index_to_64(i, bits, mask);
 		atts[i] = bishop ? batt(sq, blocks[i]) : ratt(sq, blocks[i]);
 	}
 
 	bool found = false;
 	for (int k = 0; k < 100000000; k++)
 	{
-		magic = rand64Few();
+		magic = rand64_few();
 		//if (POPCNT((mask * magic) & L(0xFF00000000000000)) < 6) continue;
 		for (int i = 0; i < 4096; i++) used[i] = EMPTY;
 
@@ -310,36 +310,36 @@ U64 findMagic(int sq, int bits, int bishop)
 	return magic;
 }
 
-int initMagics()
+int init_magics()
 {
 #ifdef MAGICS_RECALC
-	CON( hex << uppercase << "const U64 RMagic[64] =\n{\n" );
+	CON(hex << uppercase << "const U64 RMagic[64] =\n{\n");
 	for (int i = 0; i < 64; i++)
 	{
-		CON( "    L(0x" << setfill('0') << setw(16)
-			 << findMagic(i, RBits[i], 0) << ")" );
-		CON( ((i < 63) ? "," : " ") );
-		CON( " // " << SQ_OUT(i) << "\n" );
+		CON("    L(0x" << setfill('0') << setw(16)
+			 << findMagic(i, RBits[i], 0) << ")");
+		CON(((i < 63) ? "," : " "));
+		CON(" // " << SQ_OUT(i) << "\n");
 	}
 	CON( "};\n\n" );
  
-	CON( "const U64 BMagic[64] =\n{\n" );
+	CON("const U64 BMagic[64] =\n{\n");
 	for (int i = 0; i < 64; i++)
 	{
-		CON( "    L(0x" << setfill('0') << setw(16)
-			 << findMagic(i, BBits[i], 1) << ")" );
-		CON( ((i < 63) ? "," : " ") );
-		CON( " // " << SQ_OUT(i) << "\n" );
+		CON("    L(0x" << setfill('0') << setw(16)
+			 << findMagic(i, BBits[i], 1) << ")");
+		CON(((i < 63) ? "," : " "));
+		CON(" // " << SQ_OUT(i) << "\n");
 	}
-	CON( "};\n\n" << nouppercase << dec );
+	CON("};\n\n" << nouppercase << dec);
 #endif
 
-	buildMagics();
+	build_magics();
  
 	return 0;
 }
 
-void buildMagics()
+void build_magics()
 {
 	// Rooks ///////////////////////////////////////
 
@@ -351,7 +351,7 @@ void buildMagics()
 
 		for (int i = 0; i < (1 << bits); i++)
 		{
-			U64 blocks = indexTo64(i, bits, mask);
+			U64 blocks = index_to_64(i, bits, mask);
 			int j = transform(blocks, magic, bits);
 			rAtt[sq][j] = ratt(sq, blocks);
 		};
@@ -371,7 +371,7 @@ void buildMagics()
 
 		for (int i = 0; i < (1 << bits); i++)
 		{
-			U64 blocks = indexTo64(i, bits, mask);
+			U64 blocks = index_to_64(i, bits, mask);
 			int j = transform(blocks, magic, bits);
 			bAtt[sq][j] = batt(sq, blocks);
 		};

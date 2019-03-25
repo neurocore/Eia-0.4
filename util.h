@@ -27,7 +27,7 @@ const int btscn64[64] =
 // Prototypes ////////////////////
 
 extern U64 rand64();
-extern void initLut();
+extern void init_lut();
 extern void print64(U64);
 
 // Variables /////////////////////

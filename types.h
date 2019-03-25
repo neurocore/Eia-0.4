@@ -9,9 +9,6 @@ typedef unsigned long long U64;
 
 using namespace std;
 
-#define MAX_MOVES  256
-#define MAX_PLY    128
-
 #define L(x)       ( x##ULL )
 
 #define LSB(x)     ( (x) & (EMPTY - (x)) )
@@ -35,7 +32,8 @@ using namespace std;
 #define SIGN(x)    ( (x) == 0 ? 0 : ( (x) > 0 ? 1 : -1 ) )
 #define NOTZERO(x) ( ((x) == 0) ? 1 : (x) )
 
-#define SQ_OUT(sq)  FILES[X(sq)] << RANKS[Y(sq)]
+#define SQ_CON(sq)  FILES[X(sq)] << RANKS[Y(sq)]
+#define SQ_OUT(sq)  FILOW[X(sq)] << RANKS[Y(sq)]
 
 #define IS_PAWN(p) ( (p) < BN )
 #define TYPE(p)    ( (p) >> 1 )
@@ -53,7 +51,7 @@ using namespace std;
 #define SHIFT_DR(b) ( ((b) & L(0xfefefefefefefe00)) >> 9 )
 #define SHIFT_DL(b) ( ((b) & L(0x7f7f7f7f7f7f7f00)) >> 7 )
 
-#define ASSERT(x)  { if (!(x)) { S->board->print(); }; assert(x); }
+#define ASSERT(x)  { if (!(x)) { B->print(); }; assert(x); }
 
 #ifdef LOGGING
 #define LOG(s)     { S->flog << s << endl << flush; }
