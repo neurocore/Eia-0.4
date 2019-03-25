@@ -1,28 +1,37 @@
-// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
-
 #include <iostream>
 #include "search.h"
 #include "board.h"
+#include "eval.h"
 #include "util.h"
+#include "hash.h"
+#include "piece.h"
 #include "magics.h"
+#include "consts.h"
 
 using namespace std;
 
 bool console = true;
+Search * S;
+Board * B;
+Eval * E;
 
 int main()
 {
-    OUT("Eia v0.4 chess engine by Nick Kurgin 2019\n\n");
-    initLut();
-	initMagics();
-	//initArrays();
-	//initPieces();
-    //initMaterial();
-	//initSearch();
-	//initMoves();
-	//initEval();
-	//initHash();
+    OUT(ENGINE_NAME << " v" << ENGINE_VERS << " chess engine by " << ENGINE_AUTH << " 2019\n\n");
+
+    S = new Search;
+    B = new Board;
+    E = new Eval;
+
+    init_lut();
+	init_magics();
+	init_arrays();
+	init_pieces();
+    //init_material();
+	init_search();
+	init_moves();
+	//init_eval();
+	init_hash();
 
     Board B;
     B.reset();

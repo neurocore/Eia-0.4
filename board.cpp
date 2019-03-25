@@ -1,8 +1,14 @@
-// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
-
+#include <sstream>
 #include <string>
 #include "board.h"
+#include "search.h"
+#include "magics.h"
+#include "piece.h"
+#include "util.h"
+#include "hash.h"
+#include "eval.h"
+
+using namespace std;
 
 void Board::clear()
 {
