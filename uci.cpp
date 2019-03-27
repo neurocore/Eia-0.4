@@ -78,8 +78,7 @@ int parseInput()
 
 				if (B->try_parse(part, move))
 				{
-					if (B->is_legal(move)) B->make(move, true);
-					else
+					if (!B->make(move, true))
 					{
 						CON("Not legal move \"" << part << "\"\n");
 						break;

@@ -4,6 +4,7 @@
 #include <string>
 #include "types.h"
 #include "consts.h"
+#include "moves.h"
 
 using namespace std;
 
@@ -12,6 +13,7 @@ struct State // POD-type
     int ep, fifty, cap;
     int castling, pst;
     U64 hash, matkey;
+    Move curr;
 };
 
 struct Board
@@ -20,7 +22,7 @@ struct Board
     int count[PIECE_N];
     U64 occ[COLOR_N];
     int sq[SQUARE_N];
-    int wtm;
+    int wtm = 1;
     State undo[MAX_PLY];
     State * state = undo;
 
@@ -33,9 +35,8 @@ struct Board
     U64  calc_hash();
     bool try_parse(string str, Move & move);
     bool is_allowed(Move move);
-    bool is_legal(Move move);
 
-    bool is_attacked(int ksq, U64 occupied, U64 captured);
+    bool is_attacked(int ksq, U64 occupied);
     bool is_pinned(int ksq, U64 occupied, U64 captured, U64 & att);
     int  cnt_attacks(int ksq, U64 occupied, U64 captured, U64 & att);
     U64  get_attack(int piece, int sq);
@@ -44,7 +45,9 @@ struct Board
     int  see(Move move);
     bool insufficient_material();
 
-    void make(int move, bool self = false);
+    MoveVal * generate(MoveVal * moves);
+
+    bool make(int move, bool self = false);
     void unmake(int move);
 
     template<bool full = true>

@@ -27,9 +27,15 @@ void init_moves()
 
 ostream & operator << (ostream & os, const Move & move)
 {
-	if (!IS_VALID(move))
+	if (move == MOVE_NONE)
 	{
-		os << "[Invalid move]";
+		os << "[NONE]";
+		return os;
+	}
+
+    if (move == MOVE_NULL)
+	{
+		os << "[NULL]";
 		return os;
 	}
 
@@ -50,6 +56,7 @@ ostream & operator << (ostream & os, const Move & move)
 		case F_BCAPPROM: MOVE_OUT(from, to, "x", "b"); break;
 		case F_RCAPPROM: MOVE_OUT(from, to, "x", "r"); break;
 		case F_QCAPPROM: MOVE_OUT(from, to, "x", "q"); break;
+        default:         MOVE_OUT(from, to, "", "  "); break;
 	}
 
 	return os;
