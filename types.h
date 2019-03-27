@@ -143,7 +143,7 @@ static U64 shift(U64 bb, Dir dir)
 enum Square { SQUARES SQUARE_N };
 #undef _(x)
 
-#define _(x) constexpr U64 s##x = (BIT >> x);
+#define _(x) constexpr U64 s##x = (BIT << x);
 SQUARES
 #undef _(x)
 
