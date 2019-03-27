@@ -7,6 +7,7 @@
 #include "piece.h"
 #include "magics.h"
 #include "consts.h"
+#include "uci.h"
 
 using namespace std;
 
@@ -33,14 +34,10 @@ int main()
 	//init_eval();
 	init_hash();
 
-    Board B;
-    B.reset();
-    B.print();
+    B->reset();
+    B->print();
 
-    U64 occ = B.occ[0] | B.occ[1];
-    print64(RATT(E4, occ));
-    print64(RATT(A4, occ));
-    print64(BATT(E4, occ));
+    while (parse_input() >= 0);
 
     system("pause");
     return 0;

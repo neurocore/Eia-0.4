@@ -9,6 +9,7 @@
 #include "moves.h"
 #include "consts.h"
 #include "search.h"
+#include "uci.h"
 
 using namespace std;
 
@@ -19,7 +20,7 @@ bool try_parse_int(const string & s, int & r)
     return !ss.fail() && ss.eof();
 }
 
-int parseInput()
+int parse_input()
 {
 	string input;
 	getline(cin, input);
