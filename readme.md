@@ -2,5 +2,5 @@
 Chess engine
 
 # Features
-- Bitboards
+- Bitboards, magics
 - Copy-make
