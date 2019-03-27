@@ -362,109 +362,18 @@ bool Board::is_allowed(Move move) // Pseudolegality
 	return true;
 }
 
-bool Board::is_legal(Move move)
-{
-    int flags = FLAGS(move);
-    int from = FROM(move);
-    int to = TO(move);
-    int p = sq[from];
-
-	U64 att, occupied = (occ[0] | occ[1] | (BIT << to)) & ~(BIT << from);
-	U64 cap = IS_CAP(flags) ? (BIT << to) : EMPTY;
-	int ksq = BITSCAN(piece[BK + wtm]);
-	int checks = cnt_attacks(ksq, occupied, cap, att);
-
-	if (checks > 1) // Double check
-	{
-		// 0. No castling
-		if (IS_CASTLE(flags)) return false;
-
-		// 1. Evasions
-		if (p == BK || p == WK)
-		{
-			if (is_attacked(to, occupied, cap))
-				return false;
-		}
-		else return false;
-	}
-	else if (checks == 1) // Check
-	{
-		// 0. No castling
-		if (IS_CASTLE(flags)) return false;
-
-		// 1. Evasions
-		if (p == BK || p == WK)
-		{
-			if (is_attacked(to, occupied, cap))
-				return false;
-		}
-		else
-		{
-			// 2. Capture attacker
-			if ((BIT << to) & att) return true;
-
-			// 2.1. Capture pawn by en-passant
-			if (IS_EP(flags))
-			{
-				int ep = SQ( X(to), Y(from) );
-				if ((BIT << ep) & att) return true;
-			}
-
-			// 3. Block attacker
-			if ((BIT << to) & between[ksq][BITSCAN(att)]) return true;
-
-			return false;
-		}
-	}
-	else // Non-check
-	{
-		if (p == BK || p == WK)
-		{
-			if (is_attacked(to, occupied, cap)) // (1)
-				return false;
-
-			if (IS_CASTLE(flags)) // (2)
-			{
-				if (is_attacked((from + to) / 2, occupied, cap)) return false;
-			}
-		}
-		else // (3)
-		{
-			if (IS_EP(flags)) occupied &= ~(BIT << SQ( X(state->ep), Y(from) )); // En passant
-			if (is_pinned(ksq, occupied, cap, att)) return false;
-
-			// 2. Capture attacker
-			//if ((BIT << to) & att) return true;
-
-			// 3. Block attacker
-			//if ((BIT << to) & between[ksq][BITSCAN(att)]) return true;
-
-			//return false;
-			return true;
-		}
-	}
-	return true;
-}
-
-
 ////////////////////////////////////////////////////////////////////////////////////////
 
-bool Board::is_attacked(int ksq, U64 occupied, U64 captured)
+bool Board::is_attacked(int ksq, U64 occupied)
 {
-	if (pieces[BK ^ wtm].att[ksq] & piece[WK ^ wtm]) return true; // King
-	if (pieces[BP ^ wtm].att[ksq] & piece[WP ^ wtm]) return true; // Pawns
-	if (pieces[BN ^ wtm].att[ksq] & piece[WN ^ wtm]) return true; // Knights
+    int opp = sq[ksq] & 1;
 
-	U64 bq = (piece[WB ^ wtm] | piece[WQ ^ wtm]) & ~captured;
-	U64 rq = (piece[WR ^ wtm] | piece[WQ ^ wtm]) & ~captured;
+    if (pieces[BN ^ opp].att[ksq] & piece[WN ^ opp]) return true; // Knights
+	if (pieces[BP ^ opp].att[ksq] & piece[WP ^ opp]) return true; // Pawns
+	if (pieces[BK ^ opp].att[ksq] & piece[WK ^ opp]) return true; // King
 
-	// Bishops & queens
-	//if (pieces[BB ^ wtm].att[ksq] & bq)
-	if (BATT(ksq, occupied) & bq) return true;
-
-	// Rooks & queens
-	//if (pieces[BR ^ wtm].att[ksq] & rq)
-	if (RATT(ksq, occupied) & rq) return true;
+	if (BATT(ksq, occupied) & ((piece[WB ^ opp] | piece[WQ ^ opp]))) return true; // Bishops & queens
+	if (RATT(ksq, occupied) & ((piece[WR ^ opp] | piece[WQ ^ opp]))) return true; // Rooks & queens
 
 	return false;
 }
@@ -549,9 +458,9 @@ U64 Board::get_attacks_xray(int sq, U64 occupied, int col)
 	return att;
 }
 
-bool Board::in_check()
+inline bool Board::in_check() // In current position
 {
-	return is_attacked( BITSCAN(piece[BK + wtm]), occ[0] | occ[1], EMPTY );
+	return is_attacked(BITSCAN(piece[BK + wtm]), occ[0] | occ[1]);
 }
 
 U64 Board::get_attack(int piece, int sq)
@@ -582,12 +491,238 @@ U64 Board::get_attack(int piece, int sq)
     return att;
 }
 
-void Board::make(int move, bool self)
+///////////////////////////////////////////////////////////////////////////////
+
+#define ADD_MOVE(from, to, flags) { (*moves++).move = MOVE(from, to, flags); }
+#define ADD_QUIET(from, to)         ADD_MOVE(from, to, 0);
+#define ADD_CAP(from, to)           ADD_MOVE(from, to, F_CAP);
+#define ADD_PROM(from, to)        { ADD_MOVE(from, to, F_QPROM); \
+                                    ADD_MOVE(from, to, F_RPROM); \
+                                    ADD_MOVE(from, to, F_NPROM); \
+                                    ADD_MOVE(from, to, F_BPROM); }
+#define ADD_CAPPROM(from, to)     { ADD_MOVE(from, to, F_QCAPPROM); \
+                                    ADD_MOVE(from, to, F_RCAPPROM); \
+                                    ADD_MOVE(from, to, F_NCAPPROM); \
+                                    ADD_MOVE(from, to, F_BCAPPROM); }
+
+MoveVal * Board::generate(MoveVal * moves)
+{
+	ASSERT(wtm == 0 || wtm == 1);
+
+	U64 own = B->occ[wtm];
+	U64 opp = B->occ[wtm ^ 1];
+	U64 occ = own | opp, bit;
+	int p, s, to;
+
+	ASSERT( !(opp & own) );
+
+	// King /////////////////////////////////////////////////////////////////////////////////////
+
+	p = BK + wtm;
+	for (U64 bb = piece[p]; bb; RLSB(bb))
+	{
+		s = BITSCAN(bb);
+		for (U64 att = pieces[p].att[s] & ~own; att; RLSB(att))
+		{
+			bit = LSB(att);
+			to = BITSCAN(bit);
+			ADD_MOVE(s, to, (bit & opp) ? F_CAP : 0);
+		}
+	}
+
+	// Castling /////////////////////////////////////////////////////////////////////////////////
+
+	if (wtm)
+	{
+		if (state->castling & C_WK)
+		{
+			if (!(occ & (sF1 | sG1)))
+				ADD_MOVE(E1, G1, F_KCASTLE);
+		}
+
+		if (state->castling & C_WQ)
+		{
+			if (!(occ & (sB1 | sC1 | sD1)))
+				ADD_MOVE(E1, C1, F_QCASTLE);
+		}
+	}
+	else
+	{
+		if (state->castling & C_BK)
+		{
+			if (!(occ & (sF8 | sG8)))
+				ADD_MOVE(E8, G8, F_KCASTLE);
+		}
+
+		if (state->castling & C_BQ)
+		{
+			if (!(occ & (sB8 | sC8 | sD8)))
+				ADD_MOVE(E8, C8, F_QCASTLE);
+		}
+	}
+
+	// Pawns ////////////////////////////////////////////////////////////////////////////////////
+
+	p = BP + wtm;
+	if (wtm)
+	{
+		if (piece[p])
+		{
+			// Promotion & move forward
+			for (U64 bb = B->piece[p] & ((~occ) >> 8); bb; RLSB(bb))
+			{
+				s = BITSCAN(bb);
+	
+				if (Y(s) == 6) ADD_PROM(s, s + 8)
+				else           ADD_QUIET(s, s + 8);
+			}
+
+			// Attacks
+			for (U64 bb = B->piece[p] & ((opp & ~FILE_H) >> 7); bb; RLSB(bb))
+			{
+				s = BITSCAN(bb);
+				if (Y(s) == 6) ADD_CAPPROM(s, s + 7)
+				else           ADD_CAP(s, s + 7);
+			}
+
+			for (U64 bb = B->piece[p] & ((opp & ~FILE_A) >> 9); bb; RLSB(bb))
+			{
+				s = BITSCAN(bb);
+				if (Y(s) == 6) ADD_CAPPROM(s, s + 9)
+				else           ADD_CAP(s, s + 9);
+			}
+
+			// Double move
+			for (U64 bb = B->piece[p] & ((~occ) >> 8) & ((~occ) >> 16); bb; RLSB(bb))
+			{
+				s = BITSCAN(bb);
+				if (Y(s) == 1) ADD_MOVE(s, s + 16, F_PAWN2);
+			}
+
+			// En passant
+			if (state->ep)
+			{
+				for (U64 bb = B->piece[p] & pieces[B->wtm ^ 1].att[state->ep]; bb; RLSB(bb))
+				{
+					s = BITSCAN(bb);
+					ADD_MOVE(s, state->ep, F_EP);
+				}
+			}
+		}
+	}
+	else
+	{
+		if (B->piece[p])
+		{
+			// Promotion & move forward
+			for (U64 bb = B->piece[p] & ((~occ) << 8); bb; RLSB(bb))
+			{
+				s = BITSCAN(bb);
+				if (Y(s) == 1) ADD_PROM(s, s - 8)
+				else           ADD_QUIET(s, s - 8);
+			}
+
+			// Attacks
+			for (U64 bb = B->piece[p] & ((opp & ~FILE_A) << 7); bb; RLSB(bb))
+			{
+				s = BITSCAN(bb);
+				if (Y(s) == 1) ADD_CAPPROM(s, s - 7)
+				else           ADD_CAP(s, s - 7);
+			}
+
+			for (U64 bb = B->piece[p] & ((opp & ~FILE_H) << 9); bb; RLSB(bb))
+			{
+				s = BITSCAN(bb);
+				if (Y(s) == 1) ADD_CAPPROM(s, s - 9)
+				else           ADD_CAP(s, s - 9);
+			}
+
+			// Double move
+			for (U64 bb = B->piece[p] & ((~occ) << 8) & ((~occ) << 16); bb; RLSB(bb))
+			{
+				s = BITSCAN(bb);
+				if (Y(s) == 6) ADD_MOVE(s, s - 16, F_PAWN2);
+			}
+
+			// En passant
+			if (state->ep)
+			{
+				for (U64 bb = B->piece[p] & pieces[B->wtm ^ 1].att[state->ep]; bb; RLSB(bb))
+				{
+					s = BITSCAN(bb);
+					ADD_MOVE(s, state->ep, F_EP);
+				}
+			}
+		}
+	}
+
+	// Knights //////////////////////////////////////////////////////////////////////////////////
+
+	p = BN + B->wtm;
+	for (U64 bb = B->piece[p]; bb; RLSB(bb))
+	{
+		s = BITSCAN(bb);
+		for (U64 att = pieces[p].att[s] & ~own; att; RLSB(att))
+		{
+			bit = LSB(att);
+			to = BITSCAN(bit);
+			ADD_MOVE(s, to, (bit & opp) ? F_CAP : 0);
+		}
+	}
+
+	// Bishops //////////////////////////////////////////////////////////////////////////////////
+
+	p = BB + B->wtm;
+	for (U64 bb = B->piece[p]; bb; RLSB(bb))
+	{
+		s = BITSCAN(bb);
+		for (U64 att = BATT(s, occ) & ~own; att; RLSB(att))
+		{
+			bit = LSB(att);
+			to = BITSCAN(bit);
+			ADD_MOVE(s, to, (bit & opp) ? F_CAP : 0);
+		}
+	}
+
+	// Rooks ////////////////////////////////////////////////////////////////////////////////////
+
+	p = BR + B->wtm;
+	for (U64 bb = B->piece[p]; bb; RLSB(bb))
+	{
+		s = BITSCAN(bb);
+		for (U64 att = RATT(s, occ) & ~own; att; RLSB(att))
+		{
+			bit = LSB(att);
+			to = BITSCAN(bit);
+			ADD_MOVE(s, to, (bit & opp) ? F_CAP : 0);
+		}
+	}
+
+	// Queens ///////////////////////////////////////////////////////////////////////////////////
+
+	p = BQ + B->wtm;
+	for (U64 bb = B->piece[p]; bb; RLSB(bb))
+	{
+		s = BITSCAN(bb);
+		for (U64 att = QATT(s, occ) & ~own; att; RLSB(att))
+		{
+			bit = LSB(att);
+			to = BITSCAN(bit);
+			ADD_MOVE(s, to, (bit & opp) ? F_CAP : 0);
+		}
+	}
+
+	return moves;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool Board::make(int move, bool self)
 {
     int flags = FLAGS(move);
     int from = FROM(move);
     int to = TO(move);
-    int p = piece[to];
+    int p = sq[from];
 
 	ASSERT(IS_VALID(move));
 
@@ -689,12 +824,97 @@ void Board::make(int move, bool self)
 	}
 
 	state->hash ^= hashEp[state->ep] ^ hashCastle[state->castling] ^ hashWtm[0]; // Set flags
-
 	wtm ^= 1;
 
     S->movecnt++;
 	bool reversible = !flags && (p > WP);
     S->threefold[S->movecnt] = reversible ? state->hash : EMPTY;
+
+    if (is_attacked(BITSCAN(piece[BK + wtm ^ 1]), occ[0] | occ[1])) // Legality check
+    {
+        unmake(move);
+        return false;
+    }
+
+    ASSERT( !(occ[0] & occ[1]) );
+    return true;
+}
+
+void Board::unmake(int move)
+{
+    ASSERT(IS_VALID(move));
+
+    int flags = FLAGS(move);
+    int from = FROM(move);
+    int to = TO(move);
+    int p = sq[to];
+
+    //S->threefold[S->movecnt] = NN->hash;
+    S->movecnt--;
+	wtm ^= 1;
+	int prom, cap;
+
+	switch (flags)
+	{
+		case F_CAP: 
+
+            B->remove<false>(to);
+            B->place<false>(from, p);
+            B->place<false>(to, state->cap);
+			break;
+
+		case F_KCASTLE:
+
+            B->remove<false>(to - 1);
+            B->remove<false>(to);
+            B->place<false>(to + 1, BR + wtm);
+            B->place<false>(from, p);
+			break;
+
+		case F_QCASTLE:
+
+            B->remove<false>(to + 1);
+            B->remove<false>(to);
+            B->place<false>(to - 2, BR + wtm);
+            B->place<false>(from, p);
+			break;
+
+		case F_NPROM: case F_BPROM: case F_RPROM: case F_QPROM:
+
+			prom = 2 * (flags - F_NPROM) + BN + wtm;
+
+            B->remove<false>(to);
+            B->place<false>(from, p);
+			break;
+
+		case F_NCAPPROM: case F_BCAPPROM: case F_RCAPPROM: case F_QCAPPROM:
+
+			prom = 2 * (flags - F_NCAPPROM) + BN + B->wtm;
+
+            B->remove<false>(to);
+            B->place<false>(from, p);
+            B->place<false>(to, state->cap);
+			break;
+
+		case F_EP:
+
+			cap = SQ(X(to), Y(from));
+
+            B->remove<false>(to);
+            B->place<false>(cap, p ^ 1);
+            B->place<false>(from, p);
+			break;
+
+		default:
+
+            B->remove<false>(to);
+            B->place<false>(from, p);
+	}
+
+    //NN->canNull = true;
+    state->cap = NOP;
+    state->ep = 0;
+	state--;
 
     ASSERT( !(occ[0] & occ[1]) );
 }
