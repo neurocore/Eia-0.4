@@ -94,3 +94,4 @@ $tf/
 *.log
 *.tlog
 *.pdb
+*.idb
