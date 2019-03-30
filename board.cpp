@@ -366,16 +366,15 @@ bool Board::is_allowed(Move move) // Pseudolegality
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
-bool Board::is_attacked(int ksq, U64 occupied)
+bool Board::is_attacked(int ksq, U64 occupied, int opposite) // by opponent (default)
 {
-    int opp = sq[ksq] & 1;
+    int col = wtm ^ opposite;
+    if (pieces[WN ^ col].att[ksq] & piece[BN ^ col]) return true; // Knights
+	if (pieces[WP ^ col].att[ksq] & piece[BP ^ col]) return true; // Pawns
+	if (pieces[WK ^ col].att[ksq] & piece[BK ^ col]) return true; // King
 
-    if (pieces[BN ^ opp].att[ksq] & piece[WN ^ opp]) return true; // Knights
-	if (pieces[BP ^ opp].att[ksq] & piece[WP ^ opp]) return true; // Pawns
-	if (pieces[BK ^ opp].att[ksq] & piece[WK ^ opp]) return true; // King
-
-	if (BATT(ksq, occupied) & ((piece[WB ^ opp] | piece[WQ ^ opp]))) return true; // Bishops & queens
-	if (RATT(ksq, occupied) & ((piece[WR ^ opp] | piece[WQ ^ opp]))) return true; // Rooks & queens
+	if (BATT(ksq, occupied) & ((piece[BB ^ col] | piece[BQ ^ col]))) return true; // Bishops & queens
+	if (RATT(ksq, occupied) & ((piece[BR ^ col] | piece[BQ ^ col]))) return true; // Rooks & queens
 
 	return false;
 }
@@ -575,34 +574,37 @@ MoveVal * Board::generate(MoveVal * moves)
 
 	// Castling /////////////////////////////////////////////////////////////////////////////////
 
-	if (wtm)
-	{
-		if (state->castling & C_WK)
-		{
-			if (!(occupied & (sF1 | sG1)))
-				ADD_MOVE(E1, G1, F_KCASTLE);
-		}
+    if (!state->checks)
+    {
+        if (wtm)
+        {
+            if (state->castling & C_WK)
+            {
+                if (!(occupied & (sF1 | sG1)))
+                    ADD_MOVE(E1, G1, F_KCASTLE);
+            }
 
-		if (state->castling & C_WQ)
-		{
-			if (!(occupied & (sB1 | sC1 | sD1)))
-				ADD_MOVE(E1, C1, F_QCASTLE);
-		}
-	}
-	else
-	{
-		if (state->castling & C_BK)
-		{
-			if (!(occupied & (sF8 | sG8)))
-				ADD_MOVE(E8, G8, F_KCASTLE);
-		}
+            if (state->castling & C_WQ)
+            {
+                if (!(occupied & (sB1 | sC1 | sD1)))
+                    ADD_MOVE(E1, C1, F_QCASTLE);
+            }
+        }
+        else
+        {
+            if (state->castling & C_BK)
+            {
+                if (!(occupied & (sF8 | sG8)))
+                    ADD_MOVE(E8, G8, F_KCASTLE);
+            }
 
-		if (state->castling & C_BQ)
-		{
-			if (!(occupied & (sB8 | sC8 | sD8)))
-				ADD_MOVE(E8, C8, F_QCASTLE);
-		}
-	}
+            if (state->castling & C_BQ)
+            {
+                if (!(occupied & (sB8 | sC8 | sD8)))
+                    ADD_MOVE(E8, C8, F_QCASTLE);
+            }
+        }
+    }
 
 	// Pawns ////////////////////////////////////////////////////////////////////////////////////
 
@@ -915,11 +917,59 @@ bool Board::make(int move, bool self)
 	bool reversible = !flags && (p > WP);
     //S->threefold[S->movecnt] = reversible ? state->hash : EMPTY;
 
-    if (is_attacked(BITSCAN(piece[BK + wtm ^ 1]), occ[0] | occ[1])) // Legality check
+    // Legality check //////////////////////////////////////////////////////////////////////////
+
+    U64 o = occ[0] | occ[1];
+    if (is_attacked(BITSCAN(piece[BK + wtm ^ 1]), o))
     {
         unmake(move);
         return false;
     }
+
+    switch (flags)
+    {
+        case F_KCASTLE:
+            
+            if (wtm) // color changed
+            {
+                if (is_attacked(G8, o) || is_attacked(F8, o))
+                {
+                    unmake(move);
+                    return false;
+                }
+            }
+            else
+            {
+                if (is_attacked(G1, o) || is_attacked(F1, o))
+                {
+                    unmake(move);
+                    return false;
+                }
+            }
+            break;
+
+        case F_QCASTLE:
+            
+            if (wtm) // color changed
+            {
+                if (is_attacked(C8, o) || is_attacked(D8, o))
+                {
+                    unmake(move);
+                    return false;
+                }
+            }
+            else
+            {
+                if (is_attacked(C1, o) || is_attacked(D1, o))
+                {
+                    unmake(move);
+                    return false;
+                }
+            }
+            break;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////
 
     update_tactics();
 

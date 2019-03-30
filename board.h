@@ -41,7 +41,7 @@ struct Board
     bool try_parse(string str, Move & move);
     bool is_allowed(Move move);
 
-    bool is_attacked(int ksq, U64 occupied);
+    bool is_attacked(int ksq, U64 occupied, int opposite = 0);
     bool is_pinned(int ksq, U64 occupied, U64 captured, U64 & att);
     int  cnt_attacks(int ksq, U64 occupied, U64 captured, U64 & att);
     U64  get_attack(int piece, int sq);
