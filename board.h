@@ -14,6 +14,11 @@ struct State // POD-type
     int castling, pst;
     U64 hash, matkey;
     Move curr;
+
+    int checks;
+    U64 pinned;
+    U64 checkers, pinners;
+    U64 pins[64];
 };
 
 struct Board
@@ -45,7 +50,10 @@ struct Board
     int  see(Move move);
     bool insufficient_material();
 
+    void update_tactics();
     MoveVal * generate(MoveVal * moves);
+    MoveVal * generate_all(MoveVal * moves);
+    MoveVal * generate_evasions(MoveVal * moves);
 
     bool make(int move, bool self = false);
     void unmake(int move);
