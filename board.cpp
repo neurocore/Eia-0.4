@@ -501,10 +501,10 @@ void Board::update_tactics()
     state->checkers = EMPTY;
     state->pinned = EMPTY;
     state->pinners = EMPTY;
-    return;
 
     U64 bb, o = occ[0] | occ[1];
-    int ksq = BITSCAN(BK + wtm);
+    int ksq = BITSCAN(piece[BK + wtm]);
+
     if (bb = pieces[BN ^ wtm].att[ksq] & piece[WN ^ wtm]) { state->checks++; state->checkers |= bb; }; // Knights
 	if (bb = pieces[BP ^ wtm].att[ksq] & piece[WP ^ wtm]) { state->checks++; state->checkers |= bb; }; // Pawns
 	if (bb = pieces[BK ^ wtm].att[ksq] & piece[WK ^ wtm]) { state->checks++; state->checkers |= bb; }; // King
@@ -512,26 +512,24 @@ void Board::update_tactics()
     for (bb = pieces[BB ^ wtm].att[ksq] & ((piece[WB ^ wtm] | piece[WQ ^ wtm])); bb; RLSB(bb)) // Bishops & queens
     {
         int j = BITSCAN(bb);
-        U64 b = between[ksq][j];
+        U64 b = between[ksq][j] & o;
         if (!b) { state->checks++; state->checkers |= BIT << j; }
         else if (!LSB(b))
         {
-            U64 blocker = between[ksq][j] & o;
-            state->pinned |= blocker;
-            state->pins[BITSCAN(blocker)] = between[ksq][j];
+            state->pinned |= b;
+            state->pins[BITSCAN(b)] = between[ksq][j];
         }
     }
 
     for (bb = pieces[BR ^ wtm].att[ksq] & ((piece[WR ^ wtm] | piece[WQ ^ wtm])); bb; RLSB(bb)) // Rooks & queens
     {
         int j = BITSCAN(bb);
-        U64 b = between[ksq][j];
+        U64 b = between[ksq][j] & o;
         if (!b) { state->checks++; state->checkers |= BIT << j; }
         else if (!LSB(b))
         {
-            U64 blocker = between[ksq][j] & o;
-            state->pinned |= blocker;
-            state->pins[BITSCAN(blocker)] = between[ksq][j];
+            state->pinned |= b;
+            state->pins[BITSCAN(b)] = between[ksq][j];
         }
     }
 }
@@ -550,12 +548,11 @@ void Board::update_tactics()
 
 MoveVal * Board::generate_all(MoveVal * moves)
 {
+    return moves;
 }
 
 // depth 6 - 13000 knps (pseudolegal | x64)
-// depth 6 - 12700 knps (pseudolegal | x64) update_tactics
-// depth 6 - 12800 knps (pseudolegal | x64) update_tactics + N
-// depth 6 - 13300 knps (pseudolegal | x64) update_tactics + NBRQ
+// depth 6 - 10700 knps (pseudolegal | x64) update_tactics + NBRQ
 
 MoveVal * Board::generate(MoveVal * moves)
 {
