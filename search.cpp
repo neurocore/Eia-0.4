@@ -21,8 +21,8 @@ U64 perft_root(int depth)
 	for (MoveVal * mv = moves; mv != end; mv++)
 	{
 		B->state->curr = mv->move;
-		CON(mv->move << "(" << int(mv->move) << ") - ");
         if (!B->make(mv->move)) continue;
+		CON(mv->move << " - ");
 		U64 prft = perft(depth - 1);
 		cnt += prft;
 		CON(prft << "\n");
