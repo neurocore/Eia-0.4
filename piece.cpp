@@ -3,7 +3,10 @@
 #include "magics.h"
 #include "util.h"
 
+int x88_sq[256];
+int sq_x88[256];
 PieceInfo pieces[PIECE_N];
+int dir[SQUARE_N][SQUARE_N];
 U64 between[SQUARE_N][SQUARE_N];
 U64 forward_one[COLOR_N][SQUARE_N];
 
@@ -133,6 +136,12 @@ void init_pieces()
 		if (Y(i) < 7) forward_one[0][i] = (BIT << i) >> 8;
 		if (Y(i) > 0) forward_one[1][i] = (BIT << i) << 8;
 	}
+
+    for (int i = 0; i < 256; i++)
+    {
+        x88_sq[i] = SQ(X88(i), Y88(i));
+        sq_x88[i] = SQ88(X(i), Y(i));
+    }
 }
 
 void init_arrays()
@@ -141,6 +150,7 @@ void init_arrays()
 	{
 		for (int j = i + 1; j < 64; j++) // j > i
 		{
+            dir[i][j] = 0;
 			between[i][j] = EMPTY;
 			int dx = X(j) - X(i);
 			int dy = Y(j) - Y(i);
@@ -150,11 +160,14 @@ void init_arrays()
 			{
 				int sx = SIGN(dx);
 				int sy = SIGN(dy);
-				int step = SQ( SIGN(dx), SIGN(dy) );
-				for (int k = i + step; k < j; k += step)
+				int dt = SQR( SIGN(dx), SIGN(dy) );
+                dir[i][j] = dt;
+
+				for (int k = i + dt; k < j; k += dt)
 					between[i][j] |= BIT << k;
 			}
 
+			dir[j][i] = -dir[i][j];
 			between[j][i] = between[i][j];
 		}
 	}

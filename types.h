@@ -22,9 +22,14 @@ using namespace std;
 #define RLSB(x)    ( (x) = (x) & ((x) - 1) )
 
 #define SQ(x,y)    ( ((y) << 3) + (x) )
+#define SQR(x,y)   ( ((y) * 8) + (x) )
 #define X(sq)      ( (sq) & 0x07 )
 #define Y(sq)      ( (sq) >> 3 )
 #define OPP(sq)    ( (sq) ^ 070 )
+
+#define X88(sq)    ( (sq) & 0x07 )
+#define Y88(sq)    ( (sq) >> 4 )
+#define SQ88(x,y)  ( ((y) << 4) + (x) )
 
 #define MAX(x,y)   ( (x) > (y) ? (x) : (y) )
 #define MIN(x,y)   ( (x) < (y) ? (x) : (y) )
