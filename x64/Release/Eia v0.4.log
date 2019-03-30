@@ -1,0 +1,34 @@
+﻿  board.cpp
+c:\neurocore\projects\eia v0.4\eia v0.4\types.h(149): warning C4067: непредвиденные лексемы за директивой препроцессора, требуется newline
+c:\neurocore\projects\eia v0.4\eia v0.4\types.h(153): warning C4067: непредвиденные лексемы за директивой препроцессора, требуется newline
+  hash.cpp
+c:\neurocore\projects\eia v0.4\eia v0.4\types.h(149): warning C4067: непредвиденные лексемы за директивой препроцессора, требуется newline
+c:\neurocore\projects\eia v0.4\eia v0.4\types.h(153): warning C4067: непредвиденные лексемы за директивой препроцессора, требуется newline
+  magics.cpp
+c:\neurocore\projects\eia v0.4\eia v0.4\types.h(149): warning C4067: непредвиденные лексемы за директивой препроцессора, требуется newline
+c:\neurocore\projects\eia v0.4\eia v0.4\types.h(153): warning C4067: непредвиденные лексемы за директивой препроцессора, требуется newline
+  main.cpp
+c:\neurocore\projects\eia v0.4\eia v0.4\types.h(149): warning C4067: непредвиденные лексемы за директивой препроцессора, требуется newline
+c:\neurocore\projects\eia v0.4\eia v0.4\types.h(153): warning C4067: непредвиденные лексемы за директивой препроцессора, требуется newline
+  moves.cpp
+c:\neurocore\projects\eia v0.4\eia v0.4\types.h(149): warning C4067: непредвиденные лексемы за директивой препроцессора, требуется newline
+c:\neurocore\projects\eia v0.4\eia v0.4\types.h(153): warning C4067: непредвиденные лексемы за директивой препроцессора, требуется newline
+  piece.cpp
+c:\neurocore\projects\eia v0.4\eia v0.4\types.h(149): warning C4067: непредвиденные лексемы за директивой препроцессора, требуется newline
+c:\neurocore\projects\eia v0.4\eia v0.4\types.h(153): warning C4067: непредвиденные лексемы за директивой препроцессора, требуется newline
+  search.cpp
+c:\neurocore\projects\eia v0.4\eia v0.4\types.h(149): warning C4067: непредвиденные лексемы за директивой препроцессора, требуется newline
+c:\neurocore\projects\eia v0.4\eia v0.4\types.h(153): warning C4067: непредвиденные лексемы за директивой препроцессора, требуется newline
+  uci.cpp
+c:\neurocore\projects\eia v0.4\eia v0.4\types.h(67): warning C4005: OUT: изменение макроопределения
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.16299.0\shared\minwindef.h(83): note: см. предыдущее определение "OUT"
+c:\neurocore\projects\eia v0.4\eia v0.4\types.h(149): warning C4067: непредвиденные лексемы за директивой препроцессора, требуется newline
+c:\neurocore\projects\eia v0.4\eia v0.4\types.h(153): warning C4067: непредвиденные лексемы за директивой препроцессора, требуется newline
+  util.cpp
+c:\neurocore\projects\eia v0.4\eia v0.4\types.h(149): warning C4067: непредвиденные лексемы за директивой препроцессора, требуется newline
+c:\neurocore\projects\eia v0.4\eia v0.4\types.h(153): warning C4067: непредвиденные лексемы за директивой препроцессора, требуется newline
+  Создание кода
+c:\neurocore\projects\eia v0.4\eia v0.4\types.h(135): warning C4715: shift: значение возвращается не при всех путях выполнения
+  All 208 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Создание кода завершено
+  Eia v0.4.vcxproj -> C:\neurocore\projects\Eia v0.4\x64\Release\Eia v0.4.exe
