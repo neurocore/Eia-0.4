@@ -1021,7 +1021,7 @@ void Board::unmake(int move)
 			prom = 2 * (flags - F_NPROM) + BN + wtm;
 
             remove<false>(to);
-            place<false>(from, p);
+            place<false>(from, BP + wtm);
 			break;
 
 		case F_NCAPPROM: case F_BCAPPROM: case F_RCAPPROM: case F_QCAPPROM:
@@ -1029,7 +1029,7 @@ void Board::unmake(int move)
 			prom = 2 * (flags - F_NCAPPROM) + BN + wtm;
 
             remove<false>(to);
-            place<false>(from, p);
+            place<false>(from, BP + wtm);
             place<false>(to, state->cap);
 			break;
 
