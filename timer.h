@@ -66,8 +66,4 @@ public:
 
 #endif
 
-// Prototypes /////////////////////////////
-
-extern int time_to_answer();
-
 #endif // TIME_H

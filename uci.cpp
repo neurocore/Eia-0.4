@@ -176,3 +176,28 @@ bool input_available()
 	}
 	else return _kbhit();
 }
+
+bool time_to_answer()
+{
+	double elapsed = S->timer.getms();
+	if (!(((int)elapsed + 1) % S->input_time))
+	{
+		if (input_available()) parse_input();
+	}
+
+	if (S->infinite) return 0;
+
+	// Time management //////////////////
+
+	int time = S->think_time;
+
+	// Quiet move (expected 40 more moves)
+
+	if (elapsed * 40 > time)
+	{
+		S->status = Waiting;
+		return true;
+	}
+
+	return false;
+}

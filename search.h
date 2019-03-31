@@ -1,19 +1,30 @@
 #ifndef SEARCH_H
 #define SEARCH_H
 
+#include <fstream>
+#include <sstream>
+#include <iomanip>
+#include <ctime>
 #include "types.h"
 #include "consts.h"
+#include "timer.h"
 
 enum Status { Waiting, Playing, Learning };
 
 struct Search
 {
+    Status status = Waiting;
     bool infinite = false;
     int think_time = 60000;
-    Status status = Waiting;
+    int input_time = 1000;
+    U64 nodes = EMPTY;
+    int search_depth;
+    Timer timer;
+
     int color = WHITE;
     int movecnt = 0;
     int threefold[MAX_PLY];
+    Move best;
 
     ofstream flog;
 

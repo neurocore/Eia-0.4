@@ -5,6 +5,7 @@
 #include "types.h"
 #include "consts.h"
 #include "moves.h"
+#include "eval.h"
 
 using namespace std;
 
@@ -13,7 +14,7 @@ struct State // POD-type
     int ep, fifty, cap;
     int castling, pst, mat;
     U64 hash, matkey;
-    Move curr;
+    Move curr, best;
 
     int checks;
     U64 pinned;

@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <iostream>
+#include "options.h"
 
 typedef unsigned char uchar;
 typedef unsigned long long U64;
@@ -59,13 +60,13 @@ using namespace std;
 #define ASSERT(x)  { if (!(x)) { B->print(); }; assert(x); }
 
 #ifdef LOGGING
-#define LOG(s)     { S->flog << s << endl << flush; }
+#define LOG(s)     { S->flog << s << flush; }
 #else              
 #define LOG(s)     {}
 #endif             
 
 #define OUT(s)     { cout << s; LOG(s); }
-#define INP(s)     { LOG(">> " << s << "\n"); }
+#define INP(s)     { LOG(">> " << s << endl); }
 #define FLUSH      { cout << flush; }
 
 #ifdef PRODUCTION  
@@ -180,6 +181,8 @@ enum Flags
 #define TO(move)                (((move) >> 6) & 077 )
 
 #define MV_OUT(m)               SQ_OUT(FROM(m)) << SQ_OUT(TO(m))
+
+
 enum Move
 {
     MOVE_NONE = MOVE(0, 0, 0),
