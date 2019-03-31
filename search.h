@@ -15,8 +15,27 @@ struct Search
     int movecnt = 0;
     int threefold[MAX_PLY];
 
+    ofstream flog;
+
     Search()
-    {}
+    {
+#ifdef LOGGING
+        time_t now = time(NULL);
+        tm Tm[1];
+        localtime_s(Tm, &now);
+        stringstream ss;
+        ss << "log_" << setfill('0')
+        << setw(4) << (Tm->tm_year + 1900)
+        << setw(2) << (Tm->tm_mon + 1)
+        << setw(2) << Tm->tm_mday
+        << "_"
+        << setw(2) << Tm->tm_hour
+        << setw(2) << Tm->tm_min
+        << ".txt" << setfill(' ');
+ 
+        flog.open(ss.str());
+#endif
+    }
 };
 
 extern Search * S;

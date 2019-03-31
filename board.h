@@ -91,17 +91,6 @@ inline void Board::remove(int square)
     int p = sq[square];
     ASSERT(p != NOP);
 
-    /*vector<string> v;
-    if (p == NOP)
-    {
-        for (Node * M = N; M >= S->node; M--)
-        {
-            stringstream ss;
-            ss << M->curr;
-            v.push_back(ss.str());
-        }
-    }*/
-
     piece[p]    ^= (BIT << square);
 	occ[COL(p)] ^= (BIT << square);
 	sq[square] = NOP;
@@ -110,6 +99,7 @@ inline void Board::remove(int square)
     {
         //state->pst -= E->pst[p][sq];
         state->mat -= E->mat[p];
+
         state->hash ^= hashKey[p][square];
         //if (IS_PAWN(p)) state->phash ^= hashKey[p][square];
     }

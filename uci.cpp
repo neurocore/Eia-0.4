@@ -26,7 +26,7 @@ int parse_input()
 	getline(cin, input);
 	istringstream sin(input);
 
-	//INP(input); // Logging input
+	INP(input); // Logging input
 
 	string command;
 	sin >> command;
@@ -84,16 +84,15 @@ int parse_input()
 						CON("Not legal move \"" << part << "\"\n");
 						break;
 					}
+                    else
+                    {
+                        LOG(move << "\n");
+                    }
 				}
 				else CON("Can't parse move \"" << part << "\"\n");
-
-				//move.print(true);
-				//engine->board->print();
-				//CON("________________\n\n");
 			}
 			while (!sin.eof());
 		}
-
 		B->print();
 	}
 	else if (command == "go")

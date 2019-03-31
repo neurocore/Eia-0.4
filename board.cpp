@@ -184,6 +184,7 @@ void Board::from_fen(const char * fen)
     N->phash = calcPHash(N);
     S->threefold[S->movecnt] = N->hash;*/
 
+    update_mat_pst();
     update_tactics();
 }
 
