@@ -265,16 +265,13 @@ bool Board::try_parse(string str, Move & move)
 	int to    = SQ(str[2] - 'a', str[3] - '1');
 	int flags = occ[wtm ^ 1] & (BIT << to) ? F_CAP : 0;
 	int p     = sq[from];
-    move = MOVE(from, to, flags);
-
-	if (!IS_VALID(move)) return false;
 
 	switch (str[4])
 	{
-		case 'n': flags += F_NPROM; return true;
-		case 'b': flags += F_BPROM; return true;
-		case 'r': flags += F_RPROM; return true;
-		case 'q': flags += F_QPROM; return true;
+		case 'n': flags += F_NPROM; move = MOVE(from, to, flags); return true;
+		case 'b': flags += F_BPROM; move = MOVE(from, to, flags); return true;
+		case 'r': flags += F_RPROM; move = MOVE(from, to, flags); return true;
+		case 'q': flags += F_QPROM; move = MOVE(from, to, flags); return true;
 	}
 
 	// Recognizing castling
@@ -308,6 +305,9 @@ bool Board::try_parse(string str, Move & move)
 		if (Y(state->ep) == 2 || Y(state->ep) == 5)
 		if (to == state->ep) flags = F_EP; // Recognizing en passant
 	}
+
+    move = MOVE(from, to, flags);
+    string smove = to_string(move);
 
 	return is_allowed(move);
 }
