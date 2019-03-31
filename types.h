@@ -179,6 +179,7 @@ enum Flags
 #define FROM(move)              ( (move) & 077 )
 #define TO(move)                (((move) >> 6) & 077 )
 
+#define MV_OUT(m)               SQ_OUT(FROM(m)) << SQ_OUT(TO(m))
 enum Move
 {
     MOVE_NONE = MOVE(0, 0, 0),

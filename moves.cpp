@@ -1,11 +1,8 @@
-#include <ostream>
 #include "types.h"
 #include "piece.h"
 #include "moves.h"
 #include "board.h"
 #include "util.h"
-
-using namespace std;
 
 int uncastle[64];
 
@@ -23,26 +20,18 @@ void init_moves()
 	uncastle[H8] ^= C_BK;
 }
 
-#define MOVE_OUT(from, to, a, b) { CON(SQ_OUT(from) << (a) << SQ_OUT(to) << (b)); }
+#define MOVE_OUT(from, to, a, b) { ss << SQ_OUT(from) << (a) << SQ_OUT(to) << (b); }
 
-ostream & operator << (ostream & os, const Move & move)
+string to_string(Move move)
 {
-	if (move == MOVE_NONE)
-	{
-		os << "[NONE]";
-		return os;
-	}
+	if (move == MOVE_NONE) return string("[NONE]");
+    if (move == MOVE_NULL) return string("[NULL]");
 
-    if (move == MOVE_NULL)
-	{
-		os << "[NULL]";
-		return os;
-	}
-
+    stringstream ss;
     int to = TO(move);
     int from = FROM(move);
     int piece = B->sq[from];
-	os << " " << "pPnNbBrRqQkK."[piece];
+	ss << " " << "pPnNbBrRqQkK."[piece];
 
 	switch (FLAGS(move))
 	{
@@ -58,8 +47,19 @@ ostream & operator << (ostream & os, const Move & move)
 		case F_QCAPPROM: MOVE_OUT(from, to, "x", "q"); break;
         default:         MOVE_OUT(from, to, "", "  "); break;
 	}
+	return ss.str();
+}
 
-	return os;
+ostream & operator << (ostream & os, const Move & move)
+{
+    os << to_string(move);
+    return os;
+}
+
+ofstream & operator << (ofstream & os, const Move & move)
+{
+    os << to_string(move);
+    return os;
 }
 
 #undef MOVE_OUT

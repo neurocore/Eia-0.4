@@ -70,7 +70,6 @@ int parse_input()
 
 		if (moves)
 		{
-			//Node * N = S->node;
 			Move move;
 			do
 			{
