@@ -10,4 +10,7 @@
 #define MAX_MOVES     256
 #define MAX_PLY       128
 
+#define INF           32767
+#define MATE          32000
+
 #endif // CONSTS_H

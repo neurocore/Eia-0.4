@@ -18,11 +18,11 @@ Eval * E;
 
 int main()
 {
-    OUT(ENGINE_NAME << " v" << ENGINE_VERS << " chess engine by " << ENGINE_AUTH << " 2019\n\n");
-
     S = new Search;
     B = new Board;
     E = new Eval;
+
+    OUT(ENGINE_NAME << " v" << ENGINE_VERS << " chess engine by " << ENGINE_AUTH << " 2019\n\n");
 
     init_lut();
 	init_magics();
@@ -31,14 +31,12 @@ int main()
     //init_material();
 	init_search();
 	init_moves();
-	//init_eval();
+	init_eval();
 	init_hash();
 
     B->reset();
     B->print();
 
     while (parse_input() >= 0);
-
-    system("pause");
     return 0;
 }

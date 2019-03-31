@@ -494,6 +494,22 @@ U64 Board::get_attack(int piece, int sq)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+void Board::update_mat_pst()
+{
+    state->pst = 0;
+    state->mat = 0;
+
+    for (int i = 0; i < PIECE_N; i++)
+	{
+        state->mat += E->mat[i] * POPCNT(B->piece[i]);
+		for (U64 bb = B->piece[i]; bb; bb = RLSB(bb))
+		{
+			int sq = BITSCAN(bb);
+			state->pst += E->pst[i][sq];
+		}
+	}
+}
+
 void Board::update_tactics()
 {
     state->checks = 0;
@@ -821,6 +837,9 @@ bool Board::make(int move, bool self)
                     ^ hashCastle[(state - 1)->castling]; // Reset flags
         state->fifty = (state - 1)->fifty;
         state->castling = (state - 1)->castling;
+
+        state->mat = (state - 1)->mat;
+        state->pst = (state - 1)->pst;
     }
 
 	state->castling &= uncastle[from] & uncastle[to];
