@@ -12,7 +12,8 @@ using namespace std;
 struct State // POD-type
 {
     int ep, fifty, cap;
-    int castling, pst, mat;
+    int castling, mat;
+    Val pst;
     U64 hash, matkey;
     Move curr, best;
 
@@ -78,7 +79,7 @@ inline void Board::place(int square, int p)
 
     if (full)
     {
-        //state->pst += E->pst[p][sq];
+        state->pst += E->pst[p][square];
         state->mat += E->mat[p];
 
         state->hash ^= hashKey[p][square];
@@ -98,7 +99,7 @@ inline void Board::remove(int square)
 
     if (full)
     {
-        //state->pst -= E->pst[p][sq];
+        state->pst -= E->pst[p][square];
         state->mat -= E->mat[p];
 
         state->hash ^= hashKey[p][square];

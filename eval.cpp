@@ -1,6 +1,8 @@
+#include <iomanip>
 #include "eval.h"
 #include "piece.h"
 #include "util.h"
+#include "board.h"
 
 U64 vert[64];
 U64 hori[64];
@@ -12,6 +14,16 @@ U64 connects[2][64];
 int kingzone[64][64]; // [king][field] -> index
 
 const int material[PIECE_N] = {100, 100, 300, 300, 300, 300, 500, 500, 900, 900, 0, 0};
+
+int eval()
+{
+    //int phase = ei->phase[B->wtm ^ 1];
+
+    int phase = PLight * (POPCNT(B->piece[WN ^ B->wtm] | B->piece[WB ^ B->wtm]))
+              + PRook  * (POPCNT(B->piece[WR ^ B->wtm])) + PQueen  * (POPCNT(B->piece[WQ ^ B->wtm]));
+	int val = B->state->mat + B->state->pst.tapered(phase);
+    return B->wtm ? val : -val;
+}
 
 void init_eval()
 {
@@ -66,4 +78,223 @@ void init_eval()
 		//print64(isolator[i]);
 		//CON("__________________\n\n");
 	}
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+
+#undef TERM
+#define TERM(x,def) term[x] = def;
+
+Eval::Eval()
+{
+	for (int i = 0; i < TermsCnt; i++)
+		term[i] = 0;
+
+	TERMS;
+	init();
+}
+
+#undef TERM
+#define TERM(x,def) CON(left << setw(14) << #x << " " << setw(4) << term[x] << "\n");
+
+void Eval::print()
+{
+	TERMS;
+	CON("\n");
+}
+
+#undef TERM
+#define TERM(x,def) ss << #x << ":" << term[x] << " ";
+
+string Eval::get()
+{
+	stringstream ss;
+	TERMS;
+	return ss.str();
+}
+
+#undef TERM
+#define TERM(x,def) {                                           \
+	size_t found = str.find(#x, 0);                             \
+	if (found != string::npos)                                  \
+	{                                                           \
+		size_t start = str.find(":", found);                    \
+		size_t end = str.find(" ", found);                      \
+		term[x] = stoi(str.substr(start + 1, end - start - 1)); \
+	}}
+
+void Eval::set(string str)
+{
+	TERMS;
+	init();
+}
+
+#undef TERM
+
+void Eval::set(Eval * EV)
+{
+	for (int i = 0; i < TermsCnt; i++)
+		term[i] = EV->term[i];
+    init();
+}
+
+void Eval::init()
+{
+    const int PFile[8] = {-3, -1, +0, +1, +1, +0, -1, -3};
+
+    const int NLine[8] = {-4, -2, +0, +1, +1, +0, -2, -4};
+    const int NRank[8] = {-2, -1, +0, +1, +2, +3, +2, +1};
+
+    const int BLine[8] = {-3, -1, +0, +1, +1, +0, -1, -3};
+
+    const int RFile[8] = {-2, -1, +0, +1, +1, +0, -1, -2};
+
+    const int QLine[8] = {-3, -1, +0, +1, +1, +0, -1, -3};
+
+    const int KLine[8] = {-3, -1, +0, +1, +1, +0, -1, -3};
+    const int KFile[8] = {+3, +4, +2, +0, +0, +2, +4, +3};
+    const int KRank[8] = {+1, +0, -2, -3, -4, -5, -6, -7};
+
+    mat[NOP] = 0;
+    mat[WP] = 100;
+	mat[WN] = term[MatKnight];
+	mat[WB] = term[MatBishop];
+	mat[WR] = term[MatRook];
+	mat[WQ] = term[MatQueen];
+	mat[WK] = 20000;
+
+    for (int i = 0; i < PIECE_N; i += 2)
+		mat[i] = -mat[i + 1];
+
+    for (int i = 0; i < PIECE_N; i++)
+        for (int j = 0; j < 64; j++)
+            pst[i][j].clear();
+
+    // Pawns //////////////////////////////////////////////
+
+	int p = WP; 
+
+	// file
+	for (int sq = 0; sq < 64; sq++)
+	{
+		pst[p][sq].op += PFile[X(sq)] * term[PawnFile];
+	}
+
+	// center control
+	pst[p][D3].op += 10;
+	pst[p][E3].op += 10;
+
+	pst[p][D4].op += 20;
+	pst[p][E4].op += 20;
+
+	pst[p][D5].op += 10;
+	pst[p][E5].op += 10;
+
+	// Knights ////////////////////////////////////////////
+
+	p = WN;
+
+	// center
+	for (int sq = 0; sq < 64; sq++)
+	{
+		pst[p][sq].op += NLine[X(sq)] * term[KnightCenterOp];
+		pst[p][sq].op += NLine[Y(sq)] * term[KnightCenterOp];
+		pst[p][sq].eg += NLine[X(sq)] * term[KnightCenterEg];
+		pst[p][sq].eg += NLine[Y(sq)] * term[KnightCenterEg];
+	}
+
+	// rank
+	for (int sq = 0; sq < 64; sq++)
+	{
+		pst[p][sq].op += NRank[Y(sq)] * term[KnightRank];
+	}
+
+	// back rank
+	for (int sq = A1; sq <= H1; sq++)
+	{
+		pst[p][sq].op -= term[KnightBackRank];
+	}
+
+	// "trapped"
+	pst[p][A8].op -= term[KnightTrapped];
+	pst[p][H8].op -= term[KnightTrapped];
+
+	// Bishops ////////////////////////////////////////////
+
+	p = WP;
+
+	// center
+	for (int sq = 0; sq < 64; sq++)
+	{
+		pst[p][sq].op += BLine[Y(sq)] * term[BishopCenterOp];
+		pst[p][sq].op += BLine[X(sq)] * term[BishopCenterOp];
+		pst[p][sq].eg += BLine[Y(sq)] * term[BishopCenterEg];
+		pst[p][sq].eg += BLine[X(sq)] * term[BishopCenterEg];
+	}
+
+	// back rank
+	for (int sq = A1; sq <= H1; sq++)
+	{
+		pst[p][sq].op -= term[BishopBackRank];
+	}
+
+	// main diagonals
+	for (int i = 0; i < 8; i++)
+	{
+		int sq = SQ(i,i);
+		pst[p][sq].op      += term[BishopDiagonal];
+		pst[p][OPP(sq)].op += term[BishopDiagonal];
+	}
+
+	// Rooks //////////////////////////////////////////////
+
+	p = WR;
+
+	// file
+	for (int sq = 0; sq < 64; sq++)
+	{
+		pst[p][sq].op += RFile[X(sq)] * term[RookFileOp];
+	}
+
+	// Queens /////////////////////////////////////////////
+
+	p = WQ;
+
+	// center
+	for (int sq = 0; sq < 64; sq++)
+	{
+		pst[p][sq].op += QLine[X(sq)] * term[QueenCenterOp];
+		pst[p][sq].op += QLine[Y(sq)] * term[QueenCenterOp];
+		pst[p][sq].eg += QLine[X(sq)] * term[QueenCenterEg];
+		pst[p][sq].eg += QLine[Y(sq)] * term[QueenCenterEg];
+	}
+
+	// back rank
+	for (int sq = A1; sq <= H1; sq++)
+	{
+		pst[p][sq].op -= term[QueenBackRank];
+	}
+
+	// Kings //////////////////////////////////////////////
+
+	p = WK;
+
+	for (int sq = 0; sq < 64; sq++)
+	{
+		pst[p][sq].op += KFile[X(sq)] * term[KingFile];
+		pst[p][sq].op += KRank[Y(sq)] * term[KingRank];
+		pst[p][sq].eg += KLine[X(sq)] * term[KingCenterEg];
+		pst[p][sq].eg += KLine[Y(sq)] * term[KingCenterEg];
+	}
+
+	// Symmetrical copy for black /////////////////////////
+
+    for (int i = 0; i < 12; i += 2)
+    {
+        for (int sq = 0; sq < 64; sq++)
+        {
+            pst[i][sq].op = -pst[i + 1][OPP(sq)].op;
+            pst[i][sq].eg = -pst[i + 1][OPP(sq)].eg;
+        }
+    }
 }

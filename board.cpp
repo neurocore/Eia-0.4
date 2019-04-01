@@ -69,7 +69,7 @@ void Board::print()
 void Board::from_fen(const char * fen)
 {
     clear();
-    state->pst = 0;
+    state->pst.clear();
     int i = 0, square = A8;
 
     while (char ch = fen[i++])
@@ -497,7 +497,7 @@ U64 Board::get_attack(int piece, int sq)
 
 void Board::update_mat_pst()
 {
-    state->pst = 0;
+    state->pst.clear();
     state->mat = 0;
 
     for (int i = 0; i < PIECE_N; i++)

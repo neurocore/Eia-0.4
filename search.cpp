@@ -147,7 +147,6 @@ int pvs(int alpha, int beta, int depth)
 
     if (!legal)
 	{
-		//if (B->state == B->undo) S->result = N->inCheck ? Win : Draw;
 		return B->state->checks > 0 ? -INF + B->state - B->undo : 0; // contempt();
 	}
 
@@ -156,7 +155,5 @@ int pvs(int alpha, int beta, int depth)
 
 int qs(int alpha, int beta)
 {
-    //B->update_mat_pst();
-    int val = B->state->mat;
-    return B->wtm ? val : -val;
+    return eval();
 }
