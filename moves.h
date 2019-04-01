@@ -11,6 +11,8 @@ struct MoveVal
 {
     Move move;
     int val;
+
+    friend bool operator < (const MoveVal & a, const MoveVal & b);
 };
 
 extern int uncastle[64];

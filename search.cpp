@@ -2,6 +2,7 @@
 #include "board.h"
 #include "timer.h"
 #include "consts.h"
+#include "eval.h"
 #include "uci.h"
 
 void init_search()
@@ -18,7 +19,7 @@ U64 perft_root(int depth)
 	timer.set();
 
     MoveVal moves[256];
-    MoveVal * end = B->generate(moves);
+    MoveVal * end = B->generate_all(moves);
 
 	for (MoveVal * mv = moves; mv != end; mv++)
 	{
@@ -48,7 +49,7 @@ U64 perft(int depth)
     //B->state->hash_move = Move();
 
 	MoveVal moves[256];
-    MoveVal * end = B->generate(moves);
+    MoveVal * end = B->generate_all(moves);
 
 	U64 cnt = EMPTY;
 	for (MoveVal * mv = moves; mv != end; mv++)
@@ -131,7 +132,7 @@ int pvs(int alpha, int beta, int depth)
         if (search_pv) val = -pvs(-beta, -alpha, depth - 1);
         else
         {
-            val = -pvs(-alpha-1, -alpha, depth - 1);
+            val = -pvs(-alpha - 1, -alpha, depth - 1);
             if (val > alpha) val = -pvs(-beta, -alpha, depth - 1);
         }
         B->unmake(mv->move);

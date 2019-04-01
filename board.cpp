@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <sstream>
 #include <string>
 #include "board.h"
@@ -562,15 +563,45 @@ void Board::update_tactics()
                                     ADD_MOVE(from, to, F_NCAPPROM); \
                                     ADD_MOVE(from, to, F_BCAPPROM); }
 
-MoveVal * Board::generate_all(MoveVal * moves)
+MoveVal * Board::generate(MoveVal * moves)
 {
-    return moves;
+    MoveVal * end = generate_all(moves);
+
+    for (MoveVal * mv = moves; mv != end; mv++)
+    {
+        mv->val = 0;
+        int flags = FLAGS(mv->move);
+        int from = FROM(mv->move);
+        int to = TO(mv->move);
+
+        if (IS_PROM(flags)) mv->val += 10000 + N_PROM(flags);
+
+        int a = B->sq[from]; // attacker
+        int v = B->sq[to];  // victim
+
+        if (IS_CAP(flags)) mv->val += ABS(E->mat[v]) + 6 - ABS(E->mat[a]) / 100;
+        if (IS_CASTLE(flags)) mv->val += 10;
+    }
+
+    sort(moves, end);
+
+    /*if (moves->val != 0)
+    {
+        for (MoveVal * mv = moves; mv != end; mv++)
+        {
+            CON(mv->move << " - " << mv->val << "\n");
+        }
+        MoveVal * mvv = moves + 1;
+        int dfah = 0;
+    }*/
+
+    return end;
 }
 
 // depth 6 - 13000 knps (pseudolegal | x64)
 // depth 6 - 10700 knps (pseudolegal | x64) update_tactics + NBRQ
 
-MoveVal * Board::generate(MoveVal * moves)
+MoveVal * Board::generate_all(MoveVal * moves)
 {
 	U64 own = occ[wtm];
 	U64 opp = occ[wtm ^ 1];

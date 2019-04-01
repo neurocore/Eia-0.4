@@ -6,6 +6,11 @@
 
 int uncastle[64];
 
+bool operator < (const MoveVal & a, const MoveVal & b)
+{
+    return a.val > b.val;
+}
+
 void init_moves()
 {
 	for (int i = 0; i < 64; i++)
