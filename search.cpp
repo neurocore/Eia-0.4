@@ -74,35 +74,55 @@ void think()
     S->nodes = 0;
 	S->status = Status::Playing;
 	S->timer.set();
+    B->state->best = MOVE_NONE;
 
-	for (int i = 1; i <= MAX_PLY; i++)
+    int alpha = -INF, beta = INF;
+
+	for (int iter = 1; iter <= MAX_PLY; iter++)
 	{
         //engine->board->print();
 
-		S->search_depth = i;
-		int val = pvs(-INF, INF, i);
+        int depth = iter;
+		S->search_depth = depth;
+		int val = pvs(alpha, beta, depth);
 		if (!S->status) break;
 
-		int ms = S->timer.getms();
+        string comment = "";
+        if (val > alpha && val < beta) // Normal
+        {
+            alpha = val - ROOT_WINDOW / 2;
+            beta  = val + ROOT_WINDOW / 2;
+        }
+        else                           // Unexpectable
+        {
+            comment = (val <= alpha) ? "?" : "!";
+            alpha = -INF;
+            beta  =  INF;
+            iter--;
+        }
 
-		OUT("info depth " << i << " pv " << MV_OUT(B->state->best) << " ");
-		//out_pv();
+        if (IS_VALID(B->state->best))
+        {
+		    int ms = S->timer.getms();
+            OUT("info depth " << depth << " pv " << MV_OUT(B->state->best) << comment << " ");
+            //out_pv();
 
-		if      (val >  MATE) OUT("score mate " <<  (INF - val) / 2 + 1 << "\n")
-		else if (val < -MATE) OUT("score mate " << -(INF + val) / 2 - 1 << "\n")
-		else                  OUT("score cp "   << val << "\n");
+            if (val > MATE) OUT("score mate " << (INF - val) / 2 + 1 << "\n")
+            else if (val < -MATE) OUT("score mate " << -(INF + val) / 2 - 1 << "\n")
+            else                  OUT("score cp " << val << "\n");
 
-		OUT("info time " << ms <<
-            " nodes " << S->nodes << 
-            " nps " << 1000 * S->nodes / NOTZERO(ms) <<
-            " cpuload 1000\n");
+		    OUT("info time " << ms <<
+                " nodes " << S->nodes << 
+                " nps " << 1000 * S->nodes / NOTZERO(ms) <<
+                " cpuload 1000\n");
+        }
 
         //CON("hash (r/w): " << S->hash_read << " / " << S->hash_write << "\n");
 
-		S->best = B->state->best;
+		if (IS_VALID(B->state->best)) S->best = B->state->best;
 
-		if (val >  MATE) if (INF - val <= i) break;
-		if (val < -MATE) if (INF + val <= i) break;
+		if (val >  MATE) if (INF - val <= depth) break;
+		if (val < -MATE) if (INF + val <= depth) break;
 
         FLUSH;
 	}
