@@ -21,6 +21,7 @@ extern void init_moves();
 extern string to_string(Move move);
 extern ostream & operator << (ostream & os, const Move & move);
 extern ofstream & operator << (ofstream & os, const Move & move);
+extern void order(MoveVal * start, MoveVal * end, Move hash_move = MOVE_NONE);
 
 
 #endif // MOVES_H

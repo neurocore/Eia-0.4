@@ -53,8 +53,8 @@ struct Board
 
     void update_mat_pst();
     void update_tactics();
-    MoveVal * generate(MoveVal * moves);
     MoveVal * generate_all(MoveVal * moves);
+    MoveVal * generate_attacks(MoveVal * moves);
     MoveVal * generate_evasions(MoveVal * moves);
 
     bool make(int move, bool self = false);

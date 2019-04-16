@@ -1,8 +1,11 @@
+#include <algorithm>
 #include "types.h"
 #include "piece.h"
 #include "moves.h"
 #include "board.h"
 #include "util.h"
+
+using namespace std;
 
 int uncastle[64];
 
@@ -65,6 +68,39 @@ ofstream & operator << (ofstream & os, const Move & move)
 {
     os << to_string(move);
     return os;
+}
+
+void order(MoveVal * start, MoveVal * end, Move hash_move)
+{
+    for (MoveVal * mv = start; mv != end; mv++)
+    {
+        if (mv->move == hash_move) { mv->val = 1000000; continue; }
+
+        mv->val = 0;
+        int flags = FLAGS(mv->move);
+        int from = FROM(mv->move);
+        int to = TO(mv->move);
+
+        if (IS_PROM(flags)) mv->val += 10000 + N_PROM(flags);
+
+        int a = B->sq[from]; // attacker
+        int v = B->sq[to];  // victim
+
+        if (IS_CAP(flags)) mv->val += ABS(E->mat[v]) + 6 - ABS(E->mat[a]) / 100;
+        if (IS_CASTLE(flags)) mv->val += 10;
+    }
+
+    sort(start, end);
+
+    /*if (moves->val != 0)
+    {
+        for (MoveVal * mv = moves; mv != end; mv++)
+        {
+            CON(mv->move << " - " << mv->val << "\n");
+        }
+        MoveVal * mvv = moves + 1;
+        int dfah = 0;
+    }*/
 }
 
 #undef MOVE_OUT
