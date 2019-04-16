@@ -12,14 +12,13 @@ using namespace std;
 struct State // POD-type
 {
     int ep, fifty, cap;
-    int castling, mat;
+    int castling;
     Val pst;
-    U64 hash, matkey;
+    U64 hash, mkey;
     Move curr, best;
 
     int checks;
-    U64 pinned;
-    U64 checkers, pinners;
+    U64 pinned, checkers;
     U64 pins[64];
 };
 
@@ -80,9 +79,9 @@ inline void Board::place(int square, int p)
     if (full)
     {
         state->pst += E->pst[p][square];
-        state->mat += E->mat[p];
+        state->mkey += matkey[p];
 
-        state->hash ^= hashKey[p][square];
+        state->hash ^= hash_key[p][square];
         //if (IS_PAWN(p)) state->phash ^= hashKey[p][square];
     }
 }
@@ -100,9 +99,9 @@ inline void Board::remove(int square)
     if (full)
     {
         state->pst -= E->pst[p][square];
-        state->mat -= E->mat[p];
+        state->mkey -= matkey[p];
 
-        state->hash ^= hashKey[p][square];
+        state->hash ^= hash_key[p][square];
         //if (IS_PAWN(p)) state->phash ^= hashKey[p][square];
     }
 }

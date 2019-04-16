@@ -28,7 +28,7 @@ void Board::print()
 {
     const string pieceChar = "pPnNbBrRqQkK..";
     const string toMove = wtm ? "<W>" : "<B>";
-    U64 occupied = occ[BLACK] | occ[WHITE];
+    U64 occupied = occ[0] | occ[1];
 
     for (int y = 7; y >= 0; y--)
     {
@@ -36,24 +36,9 @@ void Board::print()
 
         for (int x = 0; x < 8; x++)
         {
-            U64 bit = BIT << SQ(x, y);
-
-            if (bit & occupied)
-            {
-                char ch = '?';
-                int color = !!(bit & occ[BLACK]);
-                for (int k = BP + color; k < PIECE_N; k += 2)
-                {
-                    if (bit & piece[k])
-                    {
-                        ch = pieceChar[k];
-                        break;
-                    }
-                }
-                CON(ch);
-            }
-            else
-                CON('.');
+            int s = SQ(x, y);
+            U64 bit = BIT << s;
+            CON((bit & occupied ? pieceChar[sq[s]] : '.'));
         }
 
         if (y == 0) CON(" " << toMove);
@@ -114,8 +99,8 @@ void Board::from_fen(const char * fen)
     while (fen[i] == ' ') i++;
     while (char ch = fen[i++])
     {
-        if (ch == 'w') wtm = 1;
-        if (ch == 'b') wtm = 0;
+        if (ch == 'w') wtm = WHITE;
+        if (ch == 'b') wtm = BLACK;
         if (wtm < 2) break;
     }
 
@@ -243,13 +228,13 @@ U64 Board::calc_hash()
 		for (U64 bb = piece[i]; bb; bb = RLSB(bb))
 		{
 			int j = BITSCAN(bb);
-			hash ^= hashKey[i][j];
+			hash ^= hash_key[i][j];
 		}
 	}
 
-	hash ^= hashCastle[state->castling];
-	hash ^= hashWtm[wtm];
-	hash ^= hashEp[state->ep];
+	hash ^= hash_castle[state->castling];
+	hash ^= hash_ep[state->ep];
+	if (wtm) hash ^= hash_wtm;
 
 	return hash;
 }
@@ -499,11 +484,11 @@ U64 Board::get_attack(int piece, int sq)
 void Board::update_mat_pst()
 {
     state->pst.clear();
-    state->mat = 0;
+    state->mkey = EMPTY;
 
     for (int i = 0; i < PIECE_N; i++)
 	{
-        state->mat += E->mat[i] * POPCNT(B->piece[i]);
+        state->mkey += matkey[i] * POPCNT(B->piece[i]);
 		for (U64 bb = B->piece[i]; bb; bb = RLSB(bb))
 		{
 			int sq = BITSCAN(bb);
@@ -605,7 +590,7 @@ MoveVal * Board::generate_all(MoveVal * moves)
 {
 	U64 own = occ[wtm];
 	U64 opp = occ[wtm ^ 1];
-	U64 occupied = own | opp, bit;
+	U64 o = own | opp, bit;
 	int p, to;
 
 	ASSERT(!(opp & own));
@@ -628,13 +613,13 @@ MoveVal * Board::generate_all(MoveVal * moves)
         {
             if (state->castling & C_WK)
             {
-                if (!(occupied & (sF1 | sG1)))
+                if (!(o & (sF1 | sG1)))
                     ADD_MOVE(E1, G1, F_KCASTLE);
             }
 
             if (state->castling & C_WQ)
             {
-                if (!(occupied & (sB1 | sC1 | sD1)))
+                if (!(o & (sB1 | sC1 | sD1)))
                     ADD_MOVE(E1, C1, F_QCASTLE);
             }
         }
@@ -642,13 +627,13 @@ MoveVal * Board::generate_all(MoveVal * moves)
         {
             if (state->castling & C_BK)
             {
-                if (!(occupied & (sF8 | sG8)))
+                if (!(o & (sF8 | sG8)))
                     ADD_MOVE(E8, G8, F_KCASTLE);
             }
 
             if (state->castling & C_BQ)
             {
-                if (!(occupied & (sB8 | sC8 | sD8)))
+                if (!(o & (sB8 | sC8 | sD8)))
                     ADD_MOVE(E8, C8, F_QCASTLE);
             }
         }
@@ -662,7 +647,7 @@ MoveVal * Board::generate_all(MoveVal * moves)
 		if (piece[p])
 		{
 			// Promotion & move forward
-			for (U64 bb = piece[p] & ((~occupied) >> 8); bb; RLSB(bb))
+			for (U64 bb = piece[p] & SHIFT__D(~o); bb; RLSB(bb))
 			{
 				int s = BITSCAN(bb);
 				if (Y(s) == 6) ADD_PROM(s, s + 8)
@@ -670,14 +655,14 @@ MoveVal * Board::generate_all(MoveVal * moves)
 			}
 
 			// Attacks
-			for (U64 bb = piece[p] & ((opp & ~FILE_H) >> 7); bb; RLSB(bb))
+			for (U64 bb = piece[p] & SHIFT_DL(opp); bb; RLSB(bb))
 			{
 				int s = BITSCAN(bb);
 				if (Y(s) == 6) ADD_CAPPROM(s, s + 7)
 				else           ADD_CAP(s, s + 7);
 			}
 
-			for (U64 bb = piece[p] & ((opp & ~FILE_A) >> 9); bb; RLSB(bb))
+			for (U64 bb = piece[p] & SHIFT_DR(opp); bb; RLSB(bb))
 			{
 				int s = BITSCAN(bb);
 				if (Y(s) == 6) ADD_CAPPROM(s, s + 9)
@@ -685,7 +670,7 @@ MoveVal * Board::generate_all(MoveVal * moves)
 			}
 
 			// Double move
-			for (U64 bb = piece[p] & ((~occupied) >> 8) & ((~occupied) >> 16); bb; RLSB(bb))
+			for (U64 bb = piece[p] & ((~o) >> 8) & ((~o) >> 16); bb; RLSB(bb))
 			{
 				int s = BITSCAN(bb);
 				if (Y(s) == 1) ADD_MOVE(s, s + 16, F_PAWN2);
@@ -707,7 +692,7 @@ MoveVal * Board::generate_all(MoveVal * moves)
 		if (piece[p])
 		{
 			// Promotion & move forward
-			for (U64 bb = piece[p] & ((~occupied) << 8); bb; RLSB(bb))
+			for (U64 bb = piece[p] & SHIFT__U(~o); bb; RLSB(bb))
 			{
 				int s = BITSCAN(bb);
 				if (Y(s) == 1) ADD_PROM(s, s - 8)
@@ -715,14 +700,14 @@ MoveVal * Board::generate_all(MoveVal * moves)
 			}
 
 			// Attacks
-			for (U64 bb = piece[p] & ((opp & ~FILE_A) << 7); bb; RLSB(bb))
+			for (U64 bb = piece[p] & SHIFT_UR(opp); bb; RLSB(bb))
 			{
 				int s = BITSCAN(bb);
 				if (Y(s) == 1) ADD_CAPPROM(s, s - 7)
 				else           ADD_CAP(s, s - 7);
 			}
 
-			for (U64 bb = piece[p] & ((opp & ~FILE_H) << 9); bb; RLSB(bb))
+			for (U64 bb = piece[p] & SHIFT_UL(opp); bb; RLSB(bb))
 			{
 				int s = BITSCAN(bb);
 				if (Y(s) == 1) ADD_CAPPROM(s, s - 9)
@@ -730,7 +715,7 @@ MoveVal * Board::generate_all(MoveVal * moves)
 			}
 
 			// Double move
-			for (U64 bb = piece[p] & ((~occupied) << 8) & ((~occupied) << 16); bb; RLSB(bb))
+			for (U64 bb = piece[p] & ((~o) << 8) & ((~o) << 16); bb; RLSB(bb))
 			{
 				int s = BITSCAN(bb);
 				if (Y(s) == 6) ADD_MOVE(s, s - 16, F_PAWN2);
@@ -757,7 +742,7 @@ MoveVal * Board::generate_all(MoveVal * moves)
 		for (U64 att = pieces[p].att[s] & opp; att; RLSB(att))
             ADD_CAP(s, BITSCAN(att));
 
-        for (U64 att = pieces[p].att[s] & ~occupied; att; RLSB(att))
+        for (U64 att = pieces[p].att[s] & ~o; att; RLSB(att))
             ADD_QUIET(s, BITSCAN(att));
 	}
 
@@ -767,24 +752,24 @@ MoveVal * Board::generate_all(MoveVal * moves)
 	for (U64 bb = piece[p] & ~state->pinned; bb; RLSB(bb))
 	{
 		int s = BITSCAN(bb);
-        U64 a = BATT(s, occupied);
+        U64 a = BATT(s, o);
 
 		for (U64 att = a & opp; att; RLSB(att))
             ADD_CAP(s, BITSCAN(att));
 
-        for (U64 att = a & ~occupied; att; RLSB(att))
+        for (U64 att = a & ~o; att; RLSB(att))
             ADD_QUIET(s, BITSCAN(att));
 	}
 
     for (U64 bb = piece[p] & state->pinned; bb; RLSB(bb))
 	{
 		int s = BITSCAN(bb);
-        U64 a = BATT(s, occupied);
+        U64 a = BATT(s, o);
 
 		for (U64 att = a & opp & state->pins[s]; att; RLSB(att))
             ADD_CAP(s, BITSCAN(att));
 
-        for (U64 att = a & ~occupied & state->pins[s]; att; RLSB(att))
+        for (U64 att = a & ~o & state->pins[s]; att; RLSB(att))
             ADD_QUIET(s, BITSCAN(att));
 	}
 
@@ -794,24 +779,24 @@ MoveVal * Board::generate_all(MoveVal * moves)
 	for (U64 bb = piece[p] & ~state->pinned; bb; RLSB(bb))
 	{
 		int s = BITSCAN(bb);
-        U64 a = RATT(s, occupied);
+        U64 a = RATT(s, o);
 
 		for (U64 att = a & opp; att; RLSB(att))
             ADD_CAP(s, BITSCAN(att));
 
-        for (U64 att = a & ~occupied; att; RLSB(att))
+        for (U64 att = a & ~o; att; RLSB(att))
             ADD_QUIET(s, BITSCAN(att));
 	}
 
     for (U64 bb = piece[p] & state->pinned; bb; RLSB(bb))
 	{
 		int s = BITSCAN(bb);
-        U64 a = RATT(s, occupied);
+        U64 a = RATT(s, o);
 
 		for (U64 att = a & opp & state->pins[s]; att; RLSB(att))
             ADD_CAP(s, BITSCAN(att));
 
-        for (U64 att = a & ~occupied & state->pins[s]; att; RLSB(att))
+        for (U64 att = a & ~o & state->pins[s]; att; RLSB(att))
             ADD_QUIET(s, BITSCAN(att));
 	}
 
@@ -821,25 +806,198 @@ MoveVal * Board::generate_all(MoveVal * moves)
 	for (U64 bb = piece[p] & ~state->pinned; bb; RLSB(bb))
 	{
 		int s = BITSCAN(bb);
-        U64 a = QATT(s, occupied);
+        U64 a = QATT(s, o);
 
 		for (U64 att = a & opp; att; RLSB(att))
             ADD_CAP(s, BITSCAN(att));
 
-        for (U64 att = a & ~occupied; att; RLSB(att))
+        for (U64 att = a & ~o; att; RLSB(att))
             ADD_QUIET(s, BITSCAN(att));
 	}
 
     for (U64 bb = piece[p] & state->pinned; bb; RLSB(bb))
 	{
 		int s = BITSCAN(bb);
-        U64 a = QATT(s, occupied);
+        U64 a = QATT(s, o);
 
 		for (U64 att = a & opp & state->pins[s]; att; RLSB(att))
             ADD_CAP(s, BITSCAN(att));
 
-        for (U64 att = a & ~occupied & state->pins[s]; att; RLSB(att))
+        for (U64 att = a & ~o & state->pins[s]; att; RLSB(att))
             ADD_QUIET(s, BITSCAN(att));
+	}
+
+	return moves;
+}
+
+MoveVal * Board::generate_attacks(MoveVal * moves)
+{
+	U64 own = occ[wtm];
+	U64 opp = occ[wtm ^ 1];
+	U64 o = own | opp, bit;
+	int p, to;
+
+	ASSERT(!(opp & own));
+
+	// King /////////////////////////////////////////////////////////////////////////////////////
+
+	int ksq = BITSCAN(piece[BK + wtm]);
+	for (U64 att = pieces[BK + wtm].att[ksq] & opp; att; RLSB(att))
+	{
+		bit = LSB(att);
+		to = BITSCAN(bit);
+		ADD_CAP(ksq, to);
+	}
+
+	// Pawns ////////////////////////////////////////////////////////////////////////////////////
+
+	p = BP + wtm;
+	if (wtm)
+	{
+		if (piece[p])
+		{
+			// Promotion & move forward
+			for (U64 bb = piece[p] & SHIFT__D(~o) & RANK_7; bb; RLSB(bb))
+			{
+				int s = BITSCAN(bb);
+				ADD_PROM(s, s + 8);
+			}
+
+			// Attacks
+			for (U64 bb = piece[p] & SHIFT_DL(opp); bb; RLSB(bb))
+			{
+				int s = BITSCAN(bb);
+				if (Y(s) == 6) ADD_CAPPROM(s, s + 7)
+				else           ADD_CAP(s, s + 7);
+			}
+
+			for (U64 bb = piece[p] & SHIFT_DR(opp); bb; RLSB(bb))
+			{
+				int s = BITSCAN(bb);
+				if (Y(s) == 6) ADD_CAPPROM(s, s + 9)
+				else           ADD_CAP(s, s + 9);
+			}
+
+			// En passant
+			if (state->ep)
+			{
+				for (U64 bb = piece[p] & pieces[wtm ^ 1].att[state->ep]; bb; RLSB(bb))
+				{
+					int s = BITSCAN(bb);
+					ADD_MOVE(s, state->ep, F_EP);
+				}
+			}
+		}
+	}
+	else
+	{
+		if (piece[p])
+		{
+			// Promotion & move forward
+			for (U64 bb = piece[p] & SHIFT__U(~o) & RANK_2; bb; RLSB(bb))
+			{
+				int s = BITSCAN(bb);
+				ADD_PROM(s, s - 8);
+			}
+
+			// Attacks
+			for (U64 bb = piece[p] & SHIFT_UR(opp); bb; RLSB(bb))
+			{
+				int s = BITSCAN(bb);
+				if (Y(s) == 1) ADD_CAPPROM(s, s - 7)
+				else           ADD_CAP(s, s - 7);
+			}
+
+			for (U64 bb = piece[p] & SHIFT_UL(opp); bb; RLSB(bb))
+			{
+				int s = BITSCAN(bb);
+				if (Y(s) == 1) ADD_CAPPROM(s, s - 9)
+				else           ADD_CAP(s, s - 9);
+			}
+
+			// En passant
+			if (state->ep)
+			{
+				for (U64 bb = piece[p] & pieces[wtm ^ 1].att[state->ep]; bb; RLSB(bb))
+				{
+					int s = BITSCAN(bb);
+					ADD_MOVE(s, state->ep, F_EP);
+				}
+			}
+		}
+	}
+
+	// Knights //////////////////////////////////////////////////////////////////////////////////
+
+	p = BN + wtm;
+	for (U64 bb = piece[p] & ~state->pinned; bb; RLSB(bb))
+	{
+		int s = BITSCAN(bb);
+		for (U64 att = pieces[p].att[s] & opp; att; RLSB(att))
+            ADD_CAP(s, BITSCAN(att));
+	}
+
+	// Bishops //////////////////////////////////////////////////////////////////////////////////
+
+	p = BB + wtm;
+	for (U64 bb = piece[p] & ~state->pinned; bb; RLSB(bb))
+	{
+		int s = BITSCAN(bb);
+        U64 a = BATT(s, o);
+
+		for (U64 att = a & opp; att; RLSB(att))
+            ADD_CAP(s, BITSCAN(att));
+	}
+
+    for (U64 bb = piece[p] & state->pinned; bb; RLSB(bb))
+	{
+		int s = BITSCAN(bb);
+        U64 a = BATT(s, o);
+
+		for (U64 att = a & opp & state->pins[s]; att; RLSB(att))
+            ADD_CAP(s, BITSCAN(att));
+	}
+
+	// Rooks ////////////////////////////////////////////////////////////////////////////////////
+
+	p = BR + wtm;
+	for (U64 bb = piece[p] & ~state->pinned; bb; RLSB(bb))
+	{
+		int s = BITSCAN(bb);
+        U64 a = RATT(s, o);
+
+		for (U64 att = a & opp; att; RLSB(att))
+            ADD_CAP(s, BITSCAN(att));
+	}
+
+    for (U64 bb = piece[p] & state->pinned; bb; RLSB(bb))
+	{
+		int s = BITSCAN(bb);
+        U64 a = RATT(s, o);
+
+		for (U64 att = a & opp & state->pins[s]; att; RLSB(att))
+            ADD_CAP(s, BITSCAN(att));
+	}
+
+	// Queens ///////////////////////////////////////////////////////////////////////////////////
+
+	p = BQ + wtm;
+	for (U64 bb = piece[p] & ~state->pinned; bb; RLSB(bb))
+	{
+		int s = BITSCAN(bb);
+        U64 a = QATT(s, o);
+
+		for (U64 att = a & opp; att; RLSB(att))
+            ADD_CAP(s, BITSCAN(att));
+	}
+
+    for (U64 bb = piece[p] & state->pinned; bb; RLSB(bb))
+	{
+		int s = BITSCAN(bb);
+        U64 a = QATT(s, o);
+
+		for (U64 att = a & opp & state->pins[s]; att; RLSB(att))
+            ADD_CAP(s, BITSCAN(att));
 	}
 
 	return moves;
@@ -865,12 +1023,12 @@ bool Board::make(int move, bool self)
     {
         state++;
         state->hash = (state - 1)->hash
-                    ^ hashEp[(state - 1)->ep]
-                    ^ hashCastle[(state - 1)->castling]; // Reset flags
+                    ^ hash_ep[(state - 1)->ep]
+                    ^ hash_castle[(state - 1)->castling]; // Reset flags
         state->fifty = (state - 1)->fifty;
         state->castling = (state - 1)->castling;
 
-        state->mat = (state - 1)->mat;
+        state->mkey = (state - 1)->mkey;
         state->pst = (state - 1)->pst;
     }
 
@@ -961,8 +1119,11 @@ bool Board::make(int move, bool self)
 			if (IS_PAWN(p)) state->fifty = 0;
 	}
 
-	state->hash ^= hashEp[state->ep] ^ hashCastle[state->castling] ^ hashWtm[0]; // Set flags
+	state->hash ^= hash_ep[state->ep] ^ hash_castle[state->castling] ^ hash_wtm; // Set flags
 	wtm ^= 1;
+
+    //U64 hash = calc_hash();
+    //assert(state->hash == hash);
 
     S->movecnt++;
 	bool reversible = !flags && (p > WP);
