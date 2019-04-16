@@ -7,5 +7,6 @@
 #define SEARCH_MATE_PRUNING
 #define SEARCH_HASHING
 #define SEARCH_FUTILITY
+//#define SEARCH_LMR
 
 #endif // OPTIONS_H

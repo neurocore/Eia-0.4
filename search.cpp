@@ -207,21 +207,51 @@ int pvs(int alpha, int beta, int depth)
     {
         if (!B->make(mv->move)) continue;
         legal++;
+        int new_depth = depth - 1;
 
-        if (search_pv) val = -pvs(-beta, -alpha, depth - 1);
+        bool gives_check = B->state->checks;
+        bool reduced = false;
+
+        // 2.0. Late Move Reductions //////////////////////////////////
+
+#ifdef SEARCH_LMR
+		if (!in_pv && depth >= 2
+        &&  !in_check && !gives_check
+        &&  !IS_CAP_OR_PROM(FLAGS(mv->move))
+        &&  legal >= 4 && !late_endgame)
+		{
+			reduced = true;
+			new_depth--;
+		}
+#endif
+
+        if (search_pv)
+            val = -pvs(-beta, -alpha, new_depth);
         else
         {
-            val = -pvs(-alpha - 1, -alpha, depth - 1);
-            if (val > alpha) val = -pvs(-beta, -alpha, depth - 1);
+            val = -pvs(-alpha - 1, -alpha, new_depth);
+            if (val > alpha && val < beta)
+                val = -pvs(-beta, -alpha, new_depth);
         }
+
+        if (reduced && val >= beta)
+            val = -pvs(-beta, -alpha, new_depth + 1);
+
         B->unmake(mv->move);
 
-        if (val >= beta) return beta;
         if (val > alpha)
         {
             alpha = val;
+            hash_type = Hash_Exact;
             B->state->best = mv->move;
             search_pv = false;
+
+            if (val >= beta)
+            {
+                alpha = beta;
+                hash_type = Hash_Beta;
+                break;
+            }
         }
     }
 
