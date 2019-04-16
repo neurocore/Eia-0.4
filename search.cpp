@@ -200,7 +200,8 @@ int pvs(int alpha, int beta, int depth)
 #endif
 
     MoveVal moves[256];
-    MoveVal * end = B->generate(moves);
+    MoveVal * end = B->generate_all(moves);
+    order(moves, end, hash_move);
 
     int legal = 0;
     for (MoveVal * mv = moves; mv != end; mv++)
