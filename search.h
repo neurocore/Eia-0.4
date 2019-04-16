@@ -63,7 +63,7 @@ extern void bench();
 
 extern void think();
 extern int  pvs(int alpha, int beta, int depth);
-extern int  qs(int alpha, int beta);
+extern int  qs(int alpha, int beta, int qply = 0);
 
 extern bool repetition();
 extern void update_killers(Move move, int depth, int ply);

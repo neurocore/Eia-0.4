@@ -267,7 +267,58 @@ int pvs(int alpha, int beta, int depth)
     return alpha;
 }
 
-int qs(int alpha, int beta)
+int qs(int alpha, int beta, int qply)
 {
-    return eval();
+    MoveVal moves[256];
+    MoveVal * end = 0;
+    S->nodes++;
+
+    if (!S->status || time_to_answer()) return 0;
+    if (B->state - B->undo >= MAX_PLY) return 0;
+
+    if (!B->state->checks)
+    {
+        int standpat = eval();
+        if (standpat > alpha)
+        {
+            if (standpat >= beta) return standpat;
+            alpha = standpat;
+        }
+
+        end = B->generate_attacks(moves);
+        //if (qply < 2) end = B->generate_simple_checks(moves);
+    }
+    else
+    {
+        end = B->generate_all(moves); // TODO: generate_evasions
+    }
+
+    order(moves, end);
+
+    int legal = 0;
+    for (MoveVal * mv = moves; mv != end; mv++)
+    {
+        if (!B->state->checks && !IS_CAP_OR_PROM(FLAGS(mv->move)))
+        {
+            CON("qs! " << mv->move << "\n");
+        }
+
+        if (!B->make(mv->move)) continue;
+        legal++;
+
+        int val = -qs(-beta, -alpha, qply + 1);
+
+        B->unmake(mv->move);
+
+        if (val > alpha)
+        {
+            if (val >= beta) return beta;
+            alpha = val;
+        }
+    }
+
+    if (B->state->checks && !legal)
+		alpha = -INF + PLY;
+
+    return alpha;
 }
