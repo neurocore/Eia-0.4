@@ -480,6 +480,22 @@ U64 Board::get_attack(int piece, int sq)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+void Board::update_killers(Move move, int depth)
+{
+    if (move != state->killer[0])
+    {
+        state->killer[1] = state->killer[0];
+        state->killer[0] = move;
+    }
+
+    if ((history[sq[FROM(move)]][TO(move)] += depth * depth) >= 60000)
+	{
+		for (int i = 0; i < 12; i++)
+            for (int j = 0; j < 64; j++)
+                history[i][j] >>= 1;
+	}
+}
+
 void Board::update_mat_pst()
 {
     state->pst.clear();

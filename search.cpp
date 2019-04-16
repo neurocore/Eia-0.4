@@ -249,6 +249,9 @@ int pvs(int alpha, int beta, int depth)
 
             if (val >= beta)
             {
+                if (!IS_CAP_OR_PROM(mv->move) && !in_check)
+                    B->update_killers(mv->move, depth);
+
                 alpha = beta;
                 hash_type = Hash_Beta;
                 break;

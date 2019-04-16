@@ -16,6 +16,7 @@ struct State // POD-type
     Val pst;
     U64 hash, mkey;
     Move curr, best;
+    Move killer[2];
 
     int checks;
     U64 pinned, checkers;
@@ -31,6 +32,7 @@ struct Board
     int wtm = 1;
     State undo[MAX_PLY];
     State * state = undo;
+    int history[13][64];
 
     void clear();
     void print();
@@ -50,6 +52,7 @@ struct Board
     bool in_check();
     int  see(Move move);
     bool insufficient_material();
+    void update_killers(Move move, int depth);
 
     void update_mat_pst();
     void update_tactics();
