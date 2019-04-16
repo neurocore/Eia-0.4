@@ -49,16 +49,11 @@ using namespace std;
 #define FILE(x)    ( L(0x0101010101010101) << (x) )
 #define RANK(x)    ( L(0x00000000000000FF) << ((x) * 8) )
 
-#define SHIFT__U(b) (  (b) << 8 )
-#define SHIFT__D(b) (  (b) >> 8 )
-#define SHIFT__R(b) ( ((b) & ~FILE_H) << 1 )
-#define SHIFT__L(b) ( ((b) & ~FILE_A) >> 1 )
-#define SHIFT_UR(b) ( ((b) & L(0x00fefefefefefefe)) << 7 )
-#define SHIFT_UL(b) ( ((b) & L(0x007f7f7f7f7f7f7f)) << 9 )
-#define SHIFT_DR(b) ( ((b) & L(0xfefefefefefefe00)) >> 9 )
-#define SHIFT_DL(b) ( ((b) & L(0x7f7f7f7f7f7f7f00)) >> 7 )
-
+#ifdef _DEBUG
 #define ASSERT(x)  { if (!(x)) { B->print(); }; assert(x); }
+#else
+#define ASSERT(x)  { }
+#endif
 
 #ifdef LOGGING
 #define LOG(s)     { S->flog << s << flush; }
@@ -76,7 +71,7 @@ using namespace std;
 #define CON(s)     { if (console) cout << s; }
 #endif
 
-enum Color     { WHITE, BLACK, COLOR_N };
+enum Color     { BLACK, WHITE, COLOR_N };
 enum Piece     { BP, WP, BN, WN, BB, WB, BR, WR, BQ, WQ, BK, WK, PIECE_N, NOP = 13 };
 enum PieceType { PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING, PIECE_TYPE_N };
 
@@ -117,6 +112,15 @@ _(A8) _(B8) _(C8) _(D8) _(E8) _(F8) _(G8) _(H8)
 #define RANK_8    L(0xFF00000000000000)
 
 // Directions and shifts ///////////////////////////////
+
+#define SHIFT__U(b) (  (b) << 8 )
+#define SHIFT__D(b) (  (b) >> 8 )
+#define SHIFT__R(b) ( ((b) & ~FILE_H) << 1 )
+#define SHIFT__L(b) ( ((b) & ~FILE_A) >> 1 )
+#define SHIFT_UR(b) ( ((b) & ~FILE_A) << 7 )
+#define SHIFT_UL(b) ( ((b) & ~FILE_H) << 9 )
+#define SHIFT_DR(b) ( ((b) & ~FILE_A) >> 9 )
+#define SHIFT_DL(b) ( ((b) & ~FILE_H) >> 7 )
 
 enum Dir { DIR__U, DIR__D, DIR__L, DIR__R,
            DIR_UR, DIR_UL, DIR_DR, DIR_DL };
@@ -174,7 +178,7 @@ enum Flags
 	F_QCAPPROM   // 1111
 };
 
-// Move type - 16 bits. It's compact enough to be stored in hash table and extract values
+// Move type - 16 bits. It's compact enough to be stored in hash table and to extract values from it
 
 #define MOVE(from, to, flags)   ( Move((from) | ((to) << 6) | ((flags) << 12)) )
 #define FLAGS(move)             ( (move) >> 12 )
@@ -182,7 +186,6 @@ enum Flags
 #define TO(move)                (((move) >> 6) & 077 )
 
 #define MV_OUT(m)               SQ_OUT(FROM(m)) << SQ_OUT(TO(m))
-
 
 enum Move
 {
