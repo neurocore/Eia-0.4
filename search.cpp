@@ -133,13 +133,25 @@ void think()
 int pvs(int alpha, int beta, int depth)
 {
     if (depth <= 0) return qs(alpha, beta);
+
     bool search_pv = true;
-    int val = -INF;
     B->state->best = Move();
     int hash_type = Hash_Alpha; 
+    int val = -INF;
     S->nodes++;
 
     if (!S->status || time_to_answer()) return 0;
+    // 1.1. Mate pruning /////////////////////////////////////
+
+#ifdef SEARCH_MATE_PRUNING
+	if (PLY > 0)
+	{
+		alpha = MAX(-INF + PLY, alpha);
+		beta = MIN(INF - (PLY + 1), beta);
+		if (alpha >= beta) return alpha;
+	}
+#endif
+
     // 1.2. Hash probe ///////////////////////////////////////
 
 	HashEntry * he = 0;
