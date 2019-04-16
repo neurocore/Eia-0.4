@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include "util.h"
 
+unsigned long btscn_indx;
 unsigned int lut[65536];
 
 void init_lut()
