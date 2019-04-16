@@ -15,12 +15,14 @@ bool console = true;
 Search * S;
 Board * B;
 Eval * E;
+Hash * H;
 
 int main()
 {
     S = new Search;
     B = new Board;
     E = new Eval;
+    H = new Hash;
 
     OUT(ENGINE_NAME << " v" << ENGINE_VERS << " chess engine by " << ENGINE_AUTH << " 2019\n\n");
 

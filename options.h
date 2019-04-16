@@ -4,5 +4,6 @@
 #define SSE
 #define LOGGING
 
+#define SEARCH_HASHING
 
 #endif // OPTIONS_H

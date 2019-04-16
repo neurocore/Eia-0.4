@@ -26,6 +26,9 @@ struct Search
     int threefold[MAX_PLY];
     Move best;
 
+    U64 hash_read = EMPTY;
+    U64 hash_write = EMPTY;
+
     ofstream flog;
 
     Search()

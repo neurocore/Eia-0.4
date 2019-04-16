@@ -1,8 +1,10 @@
+#include "options.h"
 #include "search.h"
 #include "board.h"
 #include "timer.h"
 #include "consts.h"
 #include "eval.h"
+#include "hash.h"
 #include "uci.h"
 
 void init_search()
@@ -46,7 +48,6 @@ U64 perft_root(int depth)
 U64 perft(int depth)
 {
     if (depth <= 0) return 1;
-    //B->state->hash_move = Move();
 
 	MoveVal moves[256];
     MoveVal * end = B->generate_all(moves);
@@ -96,8 +97,7 @@ void think()
             " nps " << 1000 * S->nodes / NOTZERO(ms) <<
             " cpuload 1000\n");
 
-        //OUT("info string pawn hash " << engine->phashRead <<
-        //    " / " << engine->phashWrite << "\n");
+        //CON("hash (r/w): " << S->hash_read << " / " << S->hash_write << "\n");
 
 		S->best = B->state->best;
 
@@ -116,9 +116,37 @@ int pvs(int alpha, int beta, int depth)
     bool search_pv = true;
     int val = -INF;
     B->state->best = Move();
+    int hash_type = Hash_Alpha; 
     S->nodes++;
 
     if (!S->status || time_to_answer()) return 0;
+    // 1.2. Hash probe ///////////////////////////////////////
+
+	HashEntry * he = 0;
+    Move hash_move = MOVE_NONE;
+
+#ifdef SEARCH_HASHING
+	he = H->get(B->state->hash);
+    if (he)
+    {
+        if (IS_VALID(he->move)) hash_move = Move(he->move);
+
+        if (PLY > 0) // Not in root
+        {
+            if (he->depth >= depth)
+            {
+                int val = he->val;
+                if      (val >  MATE && val <=  INF) val -= PLY;
+                else if (val < -MATE && val >= -INF) val += PLY;
+
+                // Exact score
+                if (he->type == Hash_Exact) return val;
+                else if (he->type == Hash_Alpha && val <= alpha) return alpha;
+                else if (he->type == Hash_Beta  && val >= beta) return beta;
+            }
+        }
+    }
+#endif
 
     MoveVal moves[256];
     MoveVal * end = B->generate(moves);
@@ -150,6 +178,10 @@ int pvs(int alpha, int beta, int depth)
 	{
 		return B->state->checks > 0 ? -INF + B->state - B->undo : 0; // contempt();
 	}
+
+#ifdef SEARCH_HASHING
+    H->set(B->state->hash, B->state->best, depth, alpha, hash_type);
+#endif
 
     return alpha;
 }

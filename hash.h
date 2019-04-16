@@ -19,20 +19,20 @@ enum ValueType
 
 // Classes ///////////////////////////////////
 
-struct HashEntry // 18
+struct HashEntry // 16
 {
     U64 key;     // 8
     short move;  // 2
     uchar type;  // 1
     uchar depth; // 1
     short age;   // 2
-    int val;     // 4
+    short val;   // 2
 };
 
 struct Hash
 {
     int size;
-    HashEntry * he;
+    HashEntry * table;
 
     Hash(int sizeMb = HASH_SIZE);
     ~Hash();
@@ -71,10 +71,11 @@ struct PHash
 
 // Variables /////////////////////////////////
 
-extern U64 hashKey[12][64];
-extern U64 hashCastle[16];
-extern U64 hashEp[64];
-extern U64 hashWtm[2];
+extern Hash * H;
+extern U64 hash_key[12][64];
+extern U64 hash_castle[16];
+extern U64 hash_ep[64];
+extern U64 hash_wtm;
 
 // Prototypes ////////////////////////////////
 
