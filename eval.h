@@ -4,16 +4,6 @@
 #include "types.h"
 #include "consts.h"
 
-enum Stage { OP, EG };
-
-#define PLight    1
-#define PRook     2
-#define PQueen    4
-#define PTotal    (PLight * 4 + PRook * 2 + PQueen)
-#define PEndgame  7
-
-#define TAPERED(phase, op, eg) ((((op) * (PTotal - phase)) + ((eg) * (phase))) / PTotal)
-
 #define TERM(x,def)            x,
 #define TERMS                  \
 	TERM(MatKnight,      320)  \
@@ -77,7 +67,7 @@ enum Terms
 	TermsCnt
 };
 
-struct Val
+struct Val // TODO: is it real to make it U64 (two signed ints)?
 {
     int op = 0, eg = 0;
 
@@ -102,15 +92,23 @@ struct Val
     Val & operator -= (const Val & v) { op -= v.op; eg -= v.eg; return *this; }
 };
 
+struct Material
+{
+    short val;
+    uchar phase;
+    uchar __1;
+};
+
 struct Eval
 {
     int term[TermsCnt];
 
-    const int material[PIECE_N] = {100, 100, 300, 300, 300, 300, 500, 500, 900, 900, 10000, 10000};
     Val pst[PIECE_N][SQUARE_N];
     int mat[PIECE_N + 1];
+    Material mat_table[MKEYS];
 
     Eval();
+
     void init();
     void print();
 
@@ -129,7 +127,7 @@ extern U64 attspan[2][64];
 extern U64 attrear[2][64];
 extern U64 connects[2][64];
 extern int kingzone[64][64]; // [king][field] -> index
-extern const int material[PIECE_N];
+extern const U64 matkey[12];
 
 extern void init_eval();
 extern int  eval();

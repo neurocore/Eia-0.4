@@ -1,6 +1,7 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+#include <climits>
 #include <cassert>
 #include <iostream>
 #include "options.h"
@@ -200,6 +201,52 @@ enum Move
 #define IS_CASTLE(flags)        ( (flags) == F_KCASTLE || (flags) == F_QCASTLE )
 #define N_PROM(flags)           ( (flags) & 3 )
 
+// Eval ////////////////////////////////////////////////
+
+enum Stage { OP, EG };
+
+#define PLight    1
+#define PRook     2
+#define PQueen    4
+#define PTotal    (PLight * 4 + PRook * 2 + PQueen)
+#define PEndgame  7
+
+#define TAPERED(phase, op, eg) ((((op) * (phase)) + ((eg) * (PTotal - phase))) / PTotal)
+
+// Material key ////////////////////////////////////////
+
+/**
+ *  Holds individual counts of pieces on board, but
+ *   designed to get precalculated material entry
+ *   that consists of material score, phase and
+ *   endgame recognition stuff just for one color.
+ *  So material key is simple to update and little
+ *   harder to get values from it.
+ */
+
+constexpr const U64 MKEY_BP = 1;
+constexpr const U64 MKEY_BN = MKEY_BP * 9;
+constexpr const U64 MKEY_BB = MKEY_BN * 11;
+constexpr const U64 MKEY_BR = MKEY_BB * 11;
+constexpr const U64 MKEY_BQ = MKEY_BR * 11;
+constexpr const U64 MKEYS   = MKEY_BQ * 10;
+
+constexpr const U64 MKEY_WP = BIT << 32;
+constexpr const U64 MKEY_WN = MKEY_WP * 9;
+constexpr const U64 MKEY_WB = MKEY_WN * 11;
+constexpr const U64 MKEY_WR = MKEY_WB * 11;
+constexpr const U64 MKEY_WQ = MKEY_WR * 11;
+constexpr const U64 MKEY_SZ = MKEY_WQ * 10;
+
+static_assert(MKEYS < INT_MAX, "Material keys are not compact enough");
+
+#define MAT_BLACK_(mkey)      (E->mat_table + ((mkey) & 0xFFFFFFFF))
+#define MAT_WHITE_(mkey)      (E->mat_table + ((mkey) >> 32))
+#define MATERIAL_(wtm, mkey)  (wtm ? MAT_WHITE_(mkey) : MAT_BLACK_(mkey))
+
+#define MAT_BLACK             MAT_BLACK_(B->state->mkey)
+#define MAT_WHITE             MAT_WHITE_(B->state->mkey)
+#define MATERIAL(wtm)         MATERIAL_(wtm, B->state->mkey)
 // Other ///////////////////////////////////////////////
 
 #define FILES     "ABCDEFGH"

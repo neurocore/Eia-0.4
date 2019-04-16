@@ -13,15 +13,14 @@ U64 attrear[2][64];
 U64 connects[2][64];
 int kingzone[64][64]; // [king][field] -> index
 
+const U64 matkey[12] = {MKEY_BP, MKEY_WP, MKEY_BN, MKEY_WN, MKEY_BB, MKEY_WB, MKEY_BR, MKEY_WR, MKEY_BQ, MKEY_WQ};
 const int material[PIECE_N] = {100, 100, 300, 300, 300, 300, 500, 500, 900, 900, 0, 0};
 
 int eval()
 {
-    //int phase = ei->phase[B->wtm ^ 1];
-
-    int phase = PLight * (POPCNT(B->piece[WN ^ B->wtm] | B->piece[WB ^ B->wtm]))
-              + PRook  * (POPCNT(B->piece[WR ^ B->wtm])) + PQueen  * (POPCNT(B->piece[WQ ^ B->wtm]));
-	int val = B->state->mat + B->state->pst.tapered(phase);
+    int mat = MAT_WHITE->val - MAT_BLACK->val;
+    int phase = MATERIAL(B->wtm ^ 1)->phase;
+	int val = mat + B->state->pst.tapered(phase) + 10;
     return B->wtm ? val : -val;
 }
 
@@ -295,6 +294,29 @@ void Eval::init()
         {
             pst[i][sq].op = -pst[i + 1][OPP(sq)].op;
             pst[i][sq].eg = -pst[i + 1][OPP(sq)].eg;
+        }
+    }
+
+    // Initialization of material data ////////////////////
+
+    for (int pi = 0; pi <= 8; pi++)
+    {
+        for (int ni = 0; ni <= 10; ni++)
+        {
+            for (int bi = 0; bi <= 10; bi++)
+            {
+                for (int ri = 0; ri <= 10; ri++)
+                {
+                    for (int qi = 0; qi <= 9; qi++)
+                    {
+                        int mkey = pi * MKEY_BP + ni * MKEY_BN + bi * MKEY_BB + ri * MKEY_BR + qi * MKEY_BQ;
+                        Material * m = mat_table + mkey;
+
+                        m->phase = (ni + bi) * PLight + ri * PRook + qi * PQueen;
+                        m->val = pi * mat[WP] + ni * mat[WN] + bi * mat[WB] + ri * mat[WR] + qi * mat[WQ];
+                    }
+                }
+            }
         }
     }
 }
