@@ -141,6 +141,12 @@ int pvs(int alpha, int beta, int depth)
     S->nodes++;
 
     if (!S->status || time_to_answer()) return 0;
+    if (B->state - B->undo >= MAX_PLY) return 0;
+
+    bool in_check = B->state->checks;
+	bool in_pv = (beta - alpha) > 1;
+	bool late_endgame = MATERIAL(B->wtm)->phase < 5;
+
     // 1.1. Mate pruning /////////////////////////////////////
 
 #ifdef SEARCH_MATE_PRUNING
@@ -180,6 +186,19 @@ int pvs(int alpha, int beta, int depth)
     }
 #endif
 
+    // 1.3. Futility pruning //////////////////////////////////
+
+#ifdef SEARCH_FUTILITY
+	const int Futility_Margin = 150;
+	if (depth <= 1 && !in_check && !in_pv && !late_endgame)
+	{
+        Material * m[2] = { MAT_BLACK, MAT_WHITE };
+		int mat = m[B->wtm]->val - m[B->wtm ^ 1]->val;
+		if (mat > beta + Futility_Margin)
+			return beta;
+	}
+#endif
+
     MoveVal moves[256];
     MoveVal * end = B->generate(moves);
 
@@ -208,7 +227,7 @@ int pvs(int alpha, int beta, int depth)
 
     if (!legal)
 	{
-		return B->state->checks > 0 ? -INF + B->state - B->undo : 0; // contempt();
+		return in_check > 0 ? -INF + B->state - B->undo : 0; // contempt();
 	}
 
 #ifdef SEARCH_HASHING
