@@ -8,6 +8,7 @@
 
 typedef unsigned char uchar;
 typedef unsigned long long U64;
+typedef unsigned int U32;
 
 using namespace std;
 
@@ -39,6 +40,8 @@ using namespace std;
 #define SIGN(x)    ( (x) == 0 ? 0 : ( (x) > 0 ? 1 : -1 ) )
 #define NOTZERO(x) ( ((x) == 0) ? 1 : (x) )
 
+#define COMPARE(x, y, lt, eq, gt) ( (x) < (y) ? (lt) : ((x) > (y) ? (gt) : (eq)) )
+
 #define SQ_CON(sq)  FILES[X(sq)] << RANKS[Y(sq)]
 #define SQ_OUT(sq)  FILOW[X(sq)] << RANKS[Y(sq)]
 
@@ -53,6 +56,12 @@ using namespace std;
 #define ASSERT(x)  { if (!(x)) { B->print(); }; assert(x); }
 #else
 #define ASSERT(x)  { }
+#endif
+
+#ifdef _DEBUG
+#define ASSERT_MOVE(x,m)  { if (!(x)) { B->print(); CON(m << "\n") }; assert(x); }
+#else
+#define ASSERT_MOVE(x,m)  { }
 #endif
 
 #ifdef LOGGING
@@ -189,8 +198,8 @@ enum Flags
 
 enum Move
 {
-    MOVE_NONE = MOVE(0, 0, 0),
-    MOVE_NULL = MOVE(1, 1, 0)
+    MOVE_NONE = MOVE(0, 0, 0), // a1a1
+    MOVE_NULL = MOVE(1, 1, 0)  // b1b1
 };
 
 #define IS_EMPTY(move)          ( (move) == MOVE_NONE )
@@ -206,7 +215,7 @@ enum Move
 
 // Eval ////////////////////////////////////////////////
 
-enum Stage { OP, EG };
+enum Phase { OP, EG };
 
 #define PLight    1
 #define PRook     2

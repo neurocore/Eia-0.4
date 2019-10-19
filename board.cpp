@@ -4,8 +4,8 @@
 #include "search.h"
 #include "magics.h"
 #include "piece.h"
-#include "util.h"
 #include "hash.h"
+#include "util.h"
 #include "eval.h"
 
 using namespace std;
@@ -299,10 +299,16 @@ bool Board::try_parse(string str, Move & move)
 
 bool Board::is_allowed(Move move) // Pseudolegality
 {
+    U32 m32 = move; // Bad move check
+    if (m32 & 0xFFFF0000) return false;
+
     int flags = FLAGS(move);
     int from = FROM(move);
     int to = TO(move);
     int p = sq[from];
+
+    // 0. Simple checks
+    if (p == NOP) return false;
 
 	// 1. Our piece must be on from square
 	if (!(occ[wtm] & (BIT << from))) return false;

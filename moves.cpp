@@ -1,4 +1,3 @@
-#include <algorithm>
 #include "types.h"
 #include "piece.h"
 #include "moves.h"
@@ -8,6 +7,11 @@
 using namespace std;
 
 int uncastle[64];
+
+bool operator == (const MoveVal & a, const MoveVal & b)
+{
+    return a.move == b.move;
+}
 
 bool operator < (const MoveVal & a, const MoveVal & b)
 {
@@ -57,6 +61,8 @@ string to_string(Move move)
 	}
 	return ss.str();
 }
+
+#undef MOVE_OUT
 
 ostream & operator << (ostream & os, const Move & move)
 {

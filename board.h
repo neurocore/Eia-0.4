@@ -34,7 +34,7 @@ struct Board
     int wtm = 1;
     State undo[MAX_PLY];
     State * state = undo;
-    int history[13][64];
+    int history[PIECE_N][SQUARE_N];
 
     void clear();
     void print();
