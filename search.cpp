@@ -1,3 +1,4 @@
+#include "movelist.h"
 #include "options.h"
 #include "search.h"
 #include "board.h"
@@ -20,18 +21,18 @@ U64 perft_root(int depth)
 	Timer timer;
 	timer.set();
 
-    MoveVal moves[256];
-    MoveVal * end = B->generate_all(moves);
+    B->state->ml.init();
+    // position fen r1bq1rk1/ppp2ppp/2n1pn2/3p2Q1/3P4/P1P2N2/2P1PPPP/R1B1KB1R w KQ - 0 8
 
-	for (MoveVal * mv = moves; mv != end; mv++)
+    while (Move move = B->state->ml.get_next_move())
 	{
-		B->state->curr = mv->move;
-        if (!B->make(mv->move)) continue;
-		CON(mv->move << " - ");
+		B->state->curr = move;
+        if (!B->make(move)) continue;
+		CON(move << "[" << int(move) << "] - ");
 		U64 prft = perft(depth - 1);
 		cnt += prft;
 		CON(prft << "\n");
-		B->unmake(mv->move);
+		B->unmake(move);
 	}
 
 	double time = timer.get();
@@ -49,16 +50,16 @@ U64 perft(int depth)
 {
     if (depth <= 0) return 1;
 
-	MoveVal moves[256];
-    MoveVal * end = B->generate_all(moves);
+    B->state->ml.init();
 
 	U64 cnt = EMPTY;
-	for (MoveVal * mv = moves; mv != end; mv++)
+    while (Move move = B->state->ml.get_next_move())
 	{
-        if (!B->make(mv->move)) continue;
+        //CON(move << "\n");
+        if (!B->make(move)) continue;
         if (depth > 1) cnt += perft(depth - 1);
         else cnt++;
-        B->unmake(mv->move);
+        B->unmake(move);
 	}
 	return cnt;
 }
@@ -76,12 +77,26 @@ void think()
 	S->timer.set();
     B->state->best = MOVE_NONE;
 
+    B->undo[0].killer[0] = B->undo[2].killer[0];
+    B->undo[0].killer[1] = B->undo[2].killer[1];
+
+    for (int p = 0; p < PIECE_N; p++)
+        for (int s = 0; s < 64; s++)
+            B->history[p][s] = 0;
+
+    for (int i = 0; i < MAX_PLY; i++)
+    {
+        State & s = B->undo[i];
+        s.curr = s.best = MOVE_NONE;
+    }
+
+    for (int i = 0; i < MAX_PLY; i++)
+        B->undo[i].killer[0] = B->undo[i].killer[1] = MOVE_NONE;
+
     int alpha = -INF, beta = INF;
 
 	for (int iter = 1; iter <= MAX_PLY; iter++)
 	{
-        //engine->board->print();
-
         int depth = iter;
 		S->search_depth = depth;
 		int val = pvs(alpha, beta, depth);
@@ -198,15 +213,13 @@ int pvs(int alpha, int beta, int depth)
 			return beta;
 	}
 #endif
-
-    MoveVal moves[256];
-    MoveVal * end = B->generate_all(moves);
-    order(moves, end, hash_move);
+    
+    B->state->ml.init();
 
     int legal = 0;
-    for (MoveVal * mv = moves; mv != end; mv++)
+    while (Move move = B->state->ml.get_next_move())
     {
-        if (!B->make(mv->move)) continue;
+        if (!B->make(move)) continue;
         legal++;
         int new_depth = depth - 1;
 
@@ -238,19 +251,19 @@ int pvs(int alpha, int beta, int depth)
         if (reduced && val >= beta)
             val = -pvs(-beta, -alpha, new_depth + 1);
 
-        B->unmake(mv->move);
+        B->unmake(move);
 
         if (val > alpha)
         {
             alpha = val;
             hash_type = Hash_Exact;
-            B->state->best = mv->move;
+            B->state->best = move;
             search_pv = false;
 
             if (val >= beta)
             {
-                if (!IS_CAP_OR_PROM(mv->move) && !in_check)
-                    B->update_killers(mv->move, depth);
+                if (!IS_CAP_OR_PROM(move) && !in_check)
+                    B->update_killers(move, depth);
 
                 alpha = beta;
                 hash_type = Hash_Beta;
@@ -273,12 +286,11 @@ int pvs(int alpha, int beta, int depth)
 
 int qs(int alpha, int beta, int qply)
 {
-    MoveVal moves[256];
-    MoveVal * end = 0;
-    S->nodes++;
-
     if (!S->status || time_to_answer()) return 0;
     if (B->state - B->undo >= MAX_PLY) return 0;
+
+    MoveList ml;
+    S->nodes++;
 
     if (!B->state->checks)
     {
@@ -289,30 +301,25 @@ int qs(int alpha, int beta, int qply)
             alpha = standpat;
         }
 
-        end = B->generate_attacks(moves);
-        //if (qply < 2) end = B->generate_simple_checks(moves);
+        ml.generate_attacks();
+        ml.set_values();
+        //if (qply < 2) ml.generate_simple_checks();
     }
     else
     {
-        end = B->generate_all(moves); // TODO: generate_evasions
+        ml.generate_all();
+        ml.set_values();
     }
 
-    order(moves, end);
-
     int legal = 0;
-    for (MoveVal * mv = moves; mv != end; mv++)
+    while (Move move = ml.get_best_move())
     {
-        if (!B->state->checks && !IS_CAP_OR_PROM(FLAGS(mv->move)))
-        {
-            CON("qs! " << mv->move << "\n");
-        }
-
-        if (!B->make(mv->move)) continue;
+        if (!B->make(move)) continue;
         legal++;
 
         int val = -qs(-beta, -alpha, qply + 1);
 
-        B->unmake(mv->move);
+        B->unmake(move);
 
         if (val > alpha)
         {

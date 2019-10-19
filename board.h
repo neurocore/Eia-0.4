@@ -4,6 +4,7 @@
 #include <string>
 #include "types.h"
 #include "consts.h"
+#include "movelist.h"
 #include "moves.h"
 #include "eval.h"
 
@@ -21,6 +22,7 @@ struct State // POD-type
     int checks;
     U64 pinned, checkers;
     U64 pins[64];
+    MoveList ml;
 };
 
 struct Board
@@ -56,9 +58,6 @@ struct Board
 
     void update_mat_pst();
     void update_tactics();
-    MoveVal * generate_all(MoveVal * moves);
-    MoveVal * generate_attacks(MoveVal * moves);
-    MoveVal * generate_evasions(MoveVal * moves);
 
     bool make(int move, bool self = false);
     void unmake(int move);
