@@ -67,20 +67,12 @@ Move MoveList::get_next_move()
 
         case S_EQ_CAPS:
             if (Move move = get_best_move(O_EQ_CAP)) return move;
-            stage = S_KILLER1;
-
-        case S_KILLER1:
-            stage = S_KILLER2;
-            if (B->state->killer[0] != MOVE_NONE) return B->state->killer[0];
-
-        case S_KILLER2:
             stage = S_GEN_QUIET;
-            if (B->state->killer[1] != MOVE_NONE) return B->state->killer[1];
 
         case S_GEN_QUIET:
             stage = S_QUIET;
             generate_quiets();
-            remove_hashmove_and_killers();
+            remove_hashmove();
             set_values();
 
         case S_QUIET:
@@ -131,6 +123,8 @@ void MoveList::set_values()
     for (MoveVal * mv = first; mv != last; mv++)
     {
         if (mv->move == hashmove) { mv->val = O_HASH; continue; }
+        if (mv->move == B->state->killer[0]) { mv->val = O_KILLER1; continue; }
+        if (mv->move == B->state->killer[1]) { mv->val = O_KILLER2; continue; }
 
         int flags = FLAGS(mv->move);
         int from = FROM(mv->move);

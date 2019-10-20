@@ -488,11 +488,11 @@ U64 Board::get_attack(int piece, int sq)
 
 void Board::update_killers(Move move, int depth)
 {
-    /*if (move != state->killer[0])
+    if (move != state->killer[0])
     {
         state->killer[1] = state->killer[0];
         state->killer[0] = move;
-    }*/
+    }
 
     if ((history[sq[FROM(move)]][TO(move)] += depth * depth) >= 60000)
 	{
