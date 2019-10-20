@@ -7,10 +7,11 @@
 
 using namespace std;
 
-void MoveList::init()
+void MoveList::init(int hash_move)
 {
     first = last = moves;
     stage = S_HASH;
+    hashmove = Move(hash_move);
 }
 
 Move MoveList::get_best_move(int lower_bound)

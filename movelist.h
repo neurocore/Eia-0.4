@@ -29,7 +29,7 @@ struct MoveList
         : hashmove(hashmove)
     {}
 
-    void init();
+    void init(int hash_move = MOVE_NONE);
 
     Move get_best_move(int lower_bound = -INT_MAX);
 

@@ -189,7 +189,9 @@ int pvs(int alpha, int beta, int depth)
 	he = H->get(B->state->hash);
     if (he)
     {
-        if (IS_VALID(he->move)) hash_move = Move(he->move);
+        if (IS_VALID(he->move)
+        &&  B->is_allowed(Move(he->move)))
+            hash_move = Move(he->move);
 
         if (PLY > 0) // Not in root
         {
@@ -221,7 +223,7 @@ int pvs(int alpha, int beta, int depth)
 	}
 #endif
     
-    B->state->ml.init();
+    B->state->ml.init(hash_move);
 
     int legal = 0;
     while (Move move = B->state->ml.get_next_move())
@@ -301,7 +303,8 @@ int qs(int alpha, int beta, int qply)
     if (!S->status || time_to_answer()) return 0;
     if (B->state - B->undo >= MAX_PLY) return 0;
 
-    MoveList ml;
+    MoveList & ml = B->state->ml;
+    ml.init();
     S->nodes++;
 
     if (!B->state->checks)
