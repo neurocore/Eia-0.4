@@ -260,6 +260,9 @@ static_assert(MKEYS < INT_MAX, "Material keys are not compact enough");
 #define MAT_WHITE             MAT_WHITE_(B->state->mkey)
 #define MATERIAL(wtm)         MATERIAL_(wtm, B->state->mkey)
 
+#define MAT_KEY_BAD_(mkey)    (((mkey) & 0xFFFFFFFF) >= MKEYS || ((mkey) >> 32) >= MKEYS)
+#define MAT_KEY_BAD           MAT_KEY_BAD_(B->state->mkey)
+
 // Search //////////////////////////////////////////////
 
 #define PLY          ( (int)(B->state - B->undo) )

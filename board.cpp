@@ -736,7 +736,8 @@ bool Board::make(int move, bool self)
 
     update_tactics();
 
-    ASSERT( !(occ[0] & occ[1]) );
+    ASSERT_MOVE(!(occ[0] & occ[1]), move);
+    ASSERT_MOVE(!MAT_KEY_BAD, move);
     return true;
 }
 
