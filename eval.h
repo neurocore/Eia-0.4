@@ -30,10 +30,10 @@
 	TERM(Doubled,         14)  \
 	TERM(Isolated,        10)  \
 	TERM(Hole,            10)  \
-	TERM(NMob,             2)  \
-	TERM(BMob,             2)  \
-	TERM(RMob,             2)  \
-	TERM(QMob,             1)  \
+	TERM(NMob,            20)  \
+	TERM(BMob,            10)  \
+	TERM(RMob,             8)  \
+	TERM(QMob,             6)  \
 	TERM(BishopPair,      13)  \
 	TERM(BadBishop,       38)  \
 	TERM(KnightOutpost,   10)  \
@@ -105,6 +105,7 @@ struct Eval
 
     Val pst[PIECE_N][SQUARE_N];
     int mat[PIECE_N + 1];
+    int mob[PIECE_TYPE_N][30];
     Material mat_table[MKEYS];
 
     Eval();
@@ -131,5 +132,9 @@ extern const U64 matkey[12];
 
 extern void init_eval();
 extern int  eval();
+extern int  eval_n(int col);
+extern int  eval_b(int col);
+extern int  eval_r(int col);
+extern int  eval_q(int col);
 
 #endif // EVAL_H

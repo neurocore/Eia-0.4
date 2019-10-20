@@ -1,8 +1,10 @@
 #include <iomanip>
+#include <cmath>
 #include "eval.h"
 #include "piece.h"
 #include "util.h"
 #include "board.h"
+#include "magics.h"
 
 U64 vert[64];
 U64 hori[64];
@@ -20,8 +22,65 @@ int eval()
 {
     int mat = MAT_WHITE->val - MAT_BLACK->val;
     int phase = MATERIAL(B->wtm ^ 1)->phase;
-	int val = mat + B->state->pst.tapered(phase) + 10;
+	int val = mat + B->state->pst.tapered(phase) + E->term[Tempo];
+
+    val += eval_n(WHITE) - eval_n(BLACK);
+    val += eval_b(WHITE) - eval_b(BLACK);
+    val += eval_r(WHITE) - eval_r(BLACK);
+    val += eval_q(WHITE) - eval_q(BLACK);
+
     return B->wtm ? val : -val;
+}
+
+int eval_n(int col)
+{
+    int val = 0;
+    for (U64 bb = B->piece[BN + col]; bb; RLSB(bb))
+    {
+        int sq = BITSCAN(bb);
+        U64 att = pieces[BN + col].att[sq] & ~B->occ[col];
+        val += E->mob[KNIGHT][POPCNT(att)];
+    }
+    return val;
+}
+
+int eval_b(int col)
+{
+    U64 o = B->occ[0] | B->occ[1];
+    int val = 0;
+    for (U64 bb = B->piece[BB + col]; bb; RLSB(bb))
+    {
+        int sq = BITSCAN(bb);
+        U64 att = BATT(sq, o) & ~B->occ[col];
+        val += E->mob[BISHOP][POPCNT(att)];
+    }
+    return val;
+}
+
+int eval_r(int col)
+{
+    U64 o = B->occ[0] | B->occ[1];
+    int val = 0;
+    for (U64 bb = B->piece[BR + col]; bb; RLSB(bb))
+    {
+        int sq = BITSCAN(bb);
+        U64 att = RATT(sq, o) & ~B->occ[col];
+        val += E->mob[ROOK][POPCNT(att)];
+    }
+    return val;
+}
+
+int eval_q(int col)
+{
+    U64 o = B->occ[0] | B->occ[1];
+    int val = 0;
+    for (U64 bb = B->piece[BQ + col]; bb; RLSB(bb))
+    {
+        int sq = BITSCAN(bb);
+        U64 att = QATT(sq, o) & ~B->occ[col];
+        val += E->mob[QUEEN][POPCNT(att)];
+    }
+    return val;
 }
 
 void init_eval()
@@ -318,5 +377,18 @@ void Eval::init()
                 }
             }
         }
+    }
+
+    // Mobility (logarithm -> entrophy) ////////////////////
+
+    const double k = exp(1) - 1;
+    for (int c = 0; c < 28; c++)
+    {
+        mob[PAWN   ][c] = 0;
+        mob[KNIGHT ][c] = term[NMob] * log(1 + k * c /  8.0);
+        mob[BISHOP ][c] = term[BMob] * log(1 + k * c / 13.0);
+        mob[ROOK   ][c] = term[RMob] * log(1 + k * c / 14.0);
+        mob[QUEEN  ][c] = term[QMob] * log(1 + k * c / 27.0);
+        mob[KING   ][c] = 0;
     }
 }
