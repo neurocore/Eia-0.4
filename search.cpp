@@ -220,6 +220,11 @@ int pvs(int alpha, int beta, int depth)
     while (Move move = B->state->ml.get_next_move())
     {
         if (!B->make(move)) continue;
+
+#ifdef DEBUG_MOVES
+        for (int i = 0; i < PLY; i++) CON(" ");
+        CON(move << "\n");
+#endif
         legal++;
         int new_depth = depth - 1;
 

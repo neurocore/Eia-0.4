@@ -1,6 +1,8 @@
 #ifndef OPTIONS_H
 #define OPTIONS_H
 
+//#define DEBUG_MOVES
+
 #define SSE
 #define LOGGING
 
