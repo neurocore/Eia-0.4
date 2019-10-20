@@ -49,6 +49,7 @@ struct Board
     bool is_attacked(int ksq, U64 occupied, int opposite = 0);
     bool is_pinned(int ksq, U64 occupied, U64 captured, U64 & att);
     int  cnt_attacks(int ksq, U64 occupied, U64 captured, U64 & att);
+    U64  get_attackers(int sq, int col);
     U64  get_attack(int piece, int sq);
     U64  get_attacks_xray(int sq, U64 occupied, int col = 2);
     bool in_check();

@@ -416,6 +416,18 @@ int Board::cnt_attacks(int ksq, U64 occupied, U64 captured, U64 & att)
 	return cnt;
 }
 
+U64 Board::get_attackers(int sq, int col)
+{
+    U64 o = occ[0] | occ[1];
+    U64 att = EMPTY;
+    att |= pieces[WK ^ col].att[sq] & piece[BK ^ col];
+    att |= pieces[WP ^ col].att[sq] & piece[BK ^ col];
+    att |= pieces[WN ^ col].att[sq] & piece[BK ^ col];
+    att |= BATT(sq, o) & (piece[BB ^ col] | piece[BQ ^ col]);
+    att |= RATT(sq, o) & (piece[BR ^ col] | piece[BQ ^ col]);
+    return att;
+}
+
 U64 Board::get_attacks_xray(int sq, U64 occupied, int col)
 {
 	U64 bb, att = EMPTY;

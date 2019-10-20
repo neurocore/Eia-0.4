@@ -756,6 +756,22 @@ void MoveList::generate_quiets()
 	}
 }
 
+void MoveList::generate_evasions() // Not necessarily actually
+{
+    // 1. Capture attacker ////////////////////////////////////
+
+    int to = BITSCAN(B->state->checkers);
+    for (U64 att = B->get_attackers(to, B->wtm); att; RLSB(att))
+        ADD_CAP(BITSCAN(att), to);
+
+    if (B->state->checks < 2)
+    {
+        // 2. Block attack ////////////////////////////////////
+
+
+    }
+}
+
 void MoveList::sort()
 {
     std::sort(first, last);

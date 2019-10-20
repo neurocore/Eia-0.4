@@ -45,6 +45,7 @@ struct MoveList
     void generate_all();
     void generate_attacks();
     void generate_quiets();
+    void generate_evasions();
     void sort();
 };
 
