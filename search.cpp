@@ -8,6 +8,13 @@
 #include "hash.h"
 #include "uci.h"
 
+string code(Move move)
+{
+    ostringstream oss;
+    oss << "[" << int(move) << "]";
+    return oss.str();
+}
+
 void init_search()
 {
 }
@@ -15,7 +22,7 @@ void init_search()
 U64 perft_root(int depth)
 {
     U64 cnt = EMPTY;
-	CON( "-- Perft " << depth << " --\n\n" );
+	CON("-- Perft " << depth << " --\n\n");
 	B->print();
 
 	Timer timer;
@@ -28,7 +35,7 @@ U64 perft_root(int depth)
 	{
 		B->state->curr = move;
         if (!B->make(move)) continue;
-		CON(move << "[" << int(move) << "] - ");
+		CON(move << setw(7) << code(move) << " - ");
 		U64 prft = perft(depth - 1);
 		cnt += prft;
 		CON(prft << "\n");

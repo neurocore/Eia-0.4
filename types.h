@@ -277,6 +277,7 @@ static_assert(MKEYS < INT_MAX, "Material keys are not compact enough");
 #define MB        (1 << 20)
 
 extern bool console;
+extern string code(Move move);
 
     
 #endif // TYPES_H
