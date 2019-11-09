@@ -111,9 +111,5 @@ inline void Board::remove(int square)
 
 extern Board * B;
 
-extern U64 ratt(int sq, U64 o);
-extern U64 batt(int sq, U64 o);
-extern U64 qatt(int sq, U64 o);
-
 
 #endif // BOARD_H

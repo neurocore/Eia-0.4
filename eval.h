@@ -53,9 +53,9 @@
 	TERM(Shield3,        -15)  \
 	TERM(Candidate,      100)  \
 	TERM(CandidateK,      32)  \
-	TERM(Passer,         200)  \
+	TERM(Passer,         100)  \
 	TERM(PasserK,         32)  \
-	TERM(PasserSupport,  300)  \
+	TERM(PasserSupport,  150)  \
 	TERM(PasserSupportK,  32)  \
 	TERM(PinMul,           5)  \
 	TERM(XrayMul,          3)  \
@@ -132,9 +132,11 @@ extern const U64 matkey[12];
 
 extern void init_eval();
 extern int  eval();
+extern int  eval_p(int col);
 extern int  eval_n(int col);
 extern int  eval_b(int col);
 extern int  eval_r(int col);
 extern int  eval_q(int col);
+
 
 #endif // EVAL_H

@@ -23,13 +23,34 @@ int eval()
     int mat = MAT_WHITE->val - MAT_BLACK->val;
     int phase = MATERIAL(B->wtm ^ 1)->phase;
 	int val = mat + B->state->pst.tapered(phase) + E->term[Tempo];
-
+    
+    val += eval_p(WHITE) - eval_p(BLACK);
     val += eval_n(WHITE) - eval_n(BLACK);
     val += eval_b(WHITE) - eval_b(BLACK);
     val += eval_r(WHITE) - eval_r(BLACK);
     val += eval_q(WHITE) - eval_q(BLACK);
 
     return B->wtm ? val : -val;
+}
+
+int eval_p(int col)
+{
+    int val = 0;
+    U64 pawns = B->piece[BP + col];
+    U64 pawns_opp = B->piece[BP + col ^ 1];
+
+    for (U64 bb = pawns; bb; RLSB(bb))
+    {
+        int sq = BITSCAN(bb);
+
+        if (isolator[sq] & pawns)
+            val -= E->term[Isolated];
+
+        if (!(attspan[col][sq] & pawns_opp)
+        &&  !(onward[col][sq] & (pawns | pawns_opp)))
+            val += E->term[Passer]; // ---------------------- Row matters
+    }
+    return val;
 }
 
 int eval_n(int col)
