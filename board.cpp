@@ -10,6 +10,29 @@
 
 using namespace std;
 
+inline U64 ratt(int sq, U64 o)
+{
+    Magic & m = rMagic[sq];
+    int i = ((o & m.mask) * m.magic) >> m.shift;
+    return rAtt[sq][i];
+}
+
+inline U64 batt(int sq, U64 o)
+{
+    Magic & m = bMagic[sq];
+    int i = ((o & m.mask) * m.magic) >> m.shift;
+    return bAtt[sq][i];
+}
+
+inline U64 qatt(int sq, U64 o)
+{
+    Magic & mr = rMagic[sq];
+    Magic & mb = bMagic[sq];
+    int i = ((o & mr.mask) * mr.magic) >> mr.shift;
+    int j = ((o & mb.mask) * mb.magic) >> mb.shift;
+    return rAtt[sq][i] | bAtt[sq][j];
+}
+
 void Board::clear()
 {
     wtm = 1;
@@ -365,8 +388,8 @@ bool Board::is_attacked(int ksq, U64 occupied, int opposite) // by opponent (def
 	if (pieces[WP ^ col].att[ksq] & piece[BP ^ col]) return true; // Pawns
 	if (pieces[WK ^ col].att[ksq] & piece[BK ^ col]) return true; // King
 
-	if (BATT(ksq, occupied) & ((piece[BB ^ col] | piece[BQ ^ col]))) return true; // Bishops & queens
-	if (RATT(ksq, occupied) & ((piece[BR ^ col] | piece[BQ ^ col]))) return true; // Rooks & queens
+	if (batt(ksq, occupied) & ((piece[BB ^ col] | piece[BQ ^ col]))) return true; // Bishops & queens
+	if (ratt(ksq, occupied) & ((piece[BR ^ col] | piece[BQ ^ col]))) return true; // Rooks & queens
 
 	return false;
 }
@@ -379,11 +402,11 @@ bool Board::is_pinned(int ksq, U64 occupied, U64 captured, U64 & att)
 
 	// Bishops & queens
 	if (pieces[BB ^ wtm].att[ksq] & bq)
-	if (att = BATT(ksq, occupied) & bq) return true;
+	if (att = batt(ksq, occupied) & bq) return true;
 
 	// Rooks & queens
 	if (pieces[BR ^ wtm].att[ksq] & rq)
-	if (att = RATT(ksq, occupied) & rq) return true;
+	if (att = ratt(ksq, occupied) & rq) return true;
 
 	return false;
 }
@@ -405,13 +428,13 @@ int Board::cnt_attacks(int ksq, U64 occupied, U64 captured, U64 & att)
 
 	// Bishops & queens
 	if (pieces[BB ^ wtm].att[ksq] & bq)
-	if (bb = BATT(ksq, occupied) & bq) {cnt++; att |= bb;}
+	if (bb = batt(ksq, occupied) & bq) {cnt++; att |= bb;}
 
 	if (cnt > 1) return cnt;
 
 	// Rooks & queens
 	if (pieces[BR ^ wtm].att[ksq] & rq)
-	if (bb = RATT(ksq, occupied) & rq) {cnt++; att |= bb;}
+	if (bb = ratt(ksq, occupied) & rq) {cnt++; att |= bb;}
 
 	return cnt;
 }
@@ -423,8 +446,8 @@ U64 Board::get_attackers(int sq, int col)
     att |= pieces[WK ^ col].att[sq] & piece[BK ^ col];
     att |= pieces[WP ^ col].att[sq] & piece[BK ^ col];
     att |= pieces[WN ^ col].att[sq] & piece[BK ^ col];
-    att |= BATT(sq, o) & (piece[BB ^ col] | piece[BQ ^ col]);
-    att |= RATT(sq, o) & (piece[BR ^ col] | piece[BQ ^ col]);
+    att |= batt(sq, o) & (piece[BB ^ col] | piece[BQ ^ col]);
+    att |= ratt(sq, o) & (piece[BR ^ col] | piece[BQ ^ col]);
     return att;
 }
 
@@ -443,7 +466,7 @@ U64 Board::get_attacks_xray(int sq, U64 occupied, int col)
 	// Bishops & queens (xray)
 	while (true)
 	{
-		bb = BATT(sq, occupied) & bq;
+		bb = batt(sq, occupied) & bq;
 		att |= bb;
 
 		if (!(bb & bq & occupied)) break;
@@ -453,7 +476,7 @@ U64 Board::get_attacks_xray(int sq, U64 occupied, int col)
 	// Rooks & queens (xray)
 	while (true)
 	{
-		bb = RATT(sq, occupied) & rq;
+		bb = ratt(sq, occupied) & rq;
 		att |= bb;
 
 		if (!(bb & rq & occupied)) break;
@@ -476,17 +499,17 @@ U64 Board::get_attack(int piece, int sq)
     {
         case BISHOP:
             occupied = occ[0] | occ[1];
-            att = BATT(sq, occupied);
+            att = batt(sq, occupied);
             break;
 
         case ROOK:
             occupied = occ[0] | occ[1];
-            att = RATT(sq, occupied);
+            att = ratt(sq, occupied);
             break;
 
         case QUEEN:
             occupied = occ[0] | occ[1];
-            att = QATT(sq, occupied);
+            att = qatt(sq, occupied);
             break;
 
         default:

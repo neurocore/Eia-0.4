@@ -182,8 +182,8 @@ U64 rand64_few();
 U64 index_to_64(int index, int bits, U64 mask);
 U64 rmask(int sq);
 U64 bmask(int sq);
-U64 ratt(int sq, U64 block);
-U64 batt(int sq, U64 block);
+U64 ratts(int sq, U64 block);
+U64 batts(int sq, U64 block);
 U64 find_magic(int sq, int m, int bishop);
 void build_magics();
 
@@ -244,14 +244,14 @@ U64 bmask(int sq)
          | trace_pre(bb, DIR_DR) | trace_pre(bb, DIR_DL);
 }
 
-U64 ratt(int sq, U64 block)
+U64 ratts(int sq, U64 block)
 {
     U64 bb = BIT << sq;
 	return trace(bb, DIR__L, block) | trace(bb, DIR__R, block)
          | trace(bb, DIR__U, block) | trace(bb, DIR__D, block);
 }
 
-U64 batt(int sq, U64 block)
+U64 batts(int sq, U64 block)
 {
     U64 bb = BIT << sq;
 	return trace(bb, DIR_UR, block) | trace(bb, DIR_UL, block)
@@ -272,7 +272,7 @@ U64 find_magic(int sq, int bits, int bishop)
 	for (int i = 0; i < (1 << bits); i++)
 	{
 		blocks[i] = index_to_64(i, bits, mask);
-		atts[i] = bishop ? batt(sq, blocks[i]) : ratt(sq, blocks[i]);
+		atts[i] = bishop ? batts(sq, blocks[i]) : ratts(sq, blocks[i]);
 	}
 
 	bool found = false;
@@ -353,7 +353,7 @@ void build_magics()
 		{
 			U64 blocks = index_to_64(i, bits, mask);
 			int j = transform(blocks, magic, bits);
-			rAtt[sq][j] = ratt(sq, blocks);
+			rAtt[sq][j] = ratts(sq, blocks);
 		};
 
 		rMagic[sq].mask = mask;
@@ -373,7 +373,7 @@ void build_magics()
 		{
 			U64 blocks = index_to_64(i, bits, mask);
 			int j = transform(blocks, magic, bits);
-			bAtt[sq][j] = batt(sq, blocks);
+			bAtt[sq][j] = batts(sq, blocks);
 		};
 
 		bMagic[sq].mask = mask;
