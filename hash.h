@@ -5,8 +5,6 @@
 #include "consts.h"
 #include "moves.h"
 
-// Consts ////////////////////////////////////
-
 #define HASH_SIZE  8
 #define PHASH_SIZE 2
 
@@ -16,8 +14,6 @@ enum ValueType
     Hash_Exact,
     Hash_Beta
 };
-
-// Classes ///////////////////////////////////
 
 struct HashEntry // 16
 {
@@ -69,17 +65,14 @@ struct PHash
     void set(U64 key, U64 * open, U64 * holes, U64 * blocked, int val);
 };
 
-// Variables /////////////////////////////////
-
 extern Hash * H;
 extern U64 hash_key[12][64];
 extern U64 hash_castle[16];
 extern U64 hash_ep[64];
 extern U64 hash_wtm;
 
-// Prototypes ////////////////////////////////
-
 extern void init_hash();
 extern U64  calc_phash();
+
 
 #endif // HASH_H

@@ -352,7 +352,7 @@ void MoveList::generate_all()
 	for (U64 bb = B->piece[p] & ~B->state->pinned; bb; RLSB(bb))
 	{
 		int s = BITSCAN(bb);
-        U64 a = BATT(s, o);
+        U64 a = batt(s, o);
 
 		for (U64 att = a & opp; att; RLSB(att))
             ADD_CAP(s, BITSCAN(att));
@@ -364,7 +364,7 @@ void MoveList::generate_all()
     for (U64 bb = B->piece[p] & B->state->pinned; bb; RLSB(bb))
 	{
 		int s = BITSCAN(bb);
-        U64 a = BATT(s, o);
+        U64 a = batt(s, o);
 
 		for (U64 att = a & opp & B->state->pins[s]; att; RLSB(att))
             ADD_CAP(s, BITSCAN(att));
@@ -379,7 +379,7 @@ void MoveList::generate_all()
 	for (U64 bb = B->piece[p] & ~B->state->pinned; bb; RLSB(bb))
 	{
 		int s = BITSCAN(bb);
-        U64 a = RATT(s, o);
+        U64 a = ratt(s, o);
 
 		for (U64 att = a & opp; att; RLSB(att))
             ADD_CAP(s, BITSCAN(att));
@@ -391,7 +391,7 @@ void MoveList::generate_all()
     for (U64 bb = B->piece[p] & B->state->pinned; bb; RLSB(bb))
 	{
 		int s = BITSCAN(bb);
-        U64 a = RATT(s, o);
+        U64 a = ratt(s, o);
 
 		for (U64 att = a & opp & B->state->pins[s]; att; RLSB(att))
             ADD_CAP(s, BITSCAN(att));
@@ -406,7 +406,7 @@ void MoveList::generate_all()
 	for (U64 bb = B->piece[p] & ~B->state->pinned; bb; RLSB(bb))
 	{
 		int s = BITSCAN(bb);
-        U64 a = QATT(s, o);
+        U64 a = qatt(s, o);
 
 		for (U64 att = a & opp; att; RLSB(att))
             ADD_CAP(s, BITSCAN(att));
@@ -418,7 +418,7 @@ void MoveList::generate_all()
     for (U64 bb = B->piece[p] & B->state->pinned; bb; RLSB(bb))
 	{
 		int s = BITSCAN(bb);
-        U64 a = QATT(s, o);
+        U64 a = qatt(s, o);
 
 		for (U64 att = a & opp & B->state->pins[s]; att; RLSB(att))
             ADD_CAP(s, BITSCAN(att));
@@ -541,7 +541,7 @@ void MoveList::generate_attacks()
 	for (U64 bb = B->piece[p] & ~B->state->pinned; bb; RLSB(bb))
 	{
 		int s = BITSCAN(bb);
-        U64 a = BATT(s, o);
+        U64 a = batt(s, o);
 
 		for (U64 att = a & opp; att; RLSB(att))
             ADD_CAP(s, BITSCAN(att));
@@ -550,7 +550,7 @@ void MoveList::generate_attacks()
     for (U64 bb = B->piece[p] & B->state->pinned; bb; RLSB(bb))
 	{
 		int s = BITSCAN(bb);
-        U64 a = BATT(s, o);
+        U64 a = batt(s, o);
 
 		for (U64 att = a & opp & B->state->pins[s]; att; RLSB(att))
             ADD_CAP(s, BITSCAN(att));
@@ -562,7 +562,7 @@ void MoveList::generate_attacks()
 	for (U64 bb = B->piece[p] & ~B->state->pinned; bb; RLSB(bb))
 	{
 		int s = BITSCAN(bb);
-        U64 a = RATT(s, o);
+        U64 a = ratt(s, o);
 
 		for (U64 att = a & opp; att; RLSB(att))
             ADD_CAP(s, BITSCAN(att));
@@ -571,7 +571,7 @@ void MoveList::generate_attacks()
     for (U64 bb = B->piece[p] & B->state->pinned; bb; RLSB(bb))
 	{
 		int s = BITSCAN(bb);
-        U64 a = RATT(s, o);
+        U64 a = ratt(s, o);
 
 		for (U64 att = a & opp & B->state->pins[s]; att; RLSB(att))
             ADD_CAP(s, BITSCAN(att));
@@ -583,7 +583,7 @@ void MoveList::generate_attacks()
 	for (U64 bb = B->piece[p] & ~B->state->pinned; bb; RLSB(bb))
 	{
 		int s = BITSCAN(bb);
-        U64 a = QATT(s, o);
+        U64 a = qatt(s, o);
 
 		for (U64 att = a & opp; att; RLSB(att))
             ADD_CAP(s, BITSCAN(att));
@@ -592,7 +592,7 @@ void MoveList::generate_attacks()
     for (U64 bb = B->piece[p] & B->state->pinned; bb; RLSB(bb))
 	{
 		int s = BITSCAN(bb);
-        U64 a = QATT(s, o);
+        U64 a = qatt(s, o);
 
 		for (U64 att = a & opp & B->state->pins[s]; att; RLSB(att))
             ADD_CAP(s, BITSCAN(att));
@@ -710,14 +710,14 @@ void MoveList::generate_quiets()
 	for (U64 bb = B->piece[p] & ~B->state->pinned; bb; RLSB(bb))
 	{
 		int s = BITSCAN(bb);
-        for (U64 att = BATT(s, o) & ~o; att; RLSB(att))
+        for (U64 att = batt(s, o) & ~o; att; RLSB(att))
             ADD_QUIET(s, BITSCAN(att));
 	}
 
     for (U64 bb = B->piece[p] & B->state->pinned; bb; RLSB(bb))
 	{
 		int s = BITSCAN(bb);
-        for (U64 att = BATT(s, o) & ~o & B->state->pins[s]; att; RLSB(att))
+        for (U64 att = batt(s, o) & ~o & B->state->pins[s]; att; RLSB(att))
             ADD_QUIET(s, BITSCAN(att));
 	}
 
@@ -727,14 +727,14 @@ void MoveList::generate_quiets()
 	for (U64 bb = B->piece[p] & ~B->state->pinned; bb; RLSB(bb))
 	{
 		int s = BITSCAN(bb);
-        for (U64 att = RATT(s, o) & ~o; att; RLSB(att))
+        for (U64 att = ratt(s, o) & ~o; att; RLSB(att))
             ADD_QUIET(s, BITSCAN(att));
 	}
 
     for (U64 bb = B->piece[p] & B->state->pinned; bb; RLSB(bb))
 	{
 		int s = BITSCAN(bb);
-        for (U64 att = RATT(s, o) & ~o & B->state->pins[s]; att; RLSB(att))
+        for (U64 att = ratt(s, o) & ~o & B->state->pins[s]; att; RLSB(att))
             ADD_QUIET(s, BITSCAN(att));
 	}
 
@@ -744,14 +744,14 @@ void MoveList::generate_quiets()
 	for (U64 bb = B->piece[p] & ~B->state->pinned; bb; RLSB(bb))
 	{
 		int s = BITSCAN(bb);
-        for (U64 att = QATT(s, o) & ~o; att; RLSB(att))
+        for (U64 att = qatt(s, o) & ~o; att; RLSB(att))
             ADD_QUIET(s, BITSCAN(att));
 	}
 
     for (U64 bb = B->piece[p] & B->state->pinned; bb; RLSB(bb))
 	{
 		int s = BITSCAN(bb);
-        for (U64 att = QATT(s, o) & ~o & B->state->pins[s]; att; RLSB(att))
+        for (U64 att = qatt(s, o) & ~o & B->state->pins[s]; att; RLSB(att))
             ADD_QUIET(s, BITSCAN(att));
 	}
 }

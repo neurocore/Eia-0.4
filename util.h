@@ -5,8 +5,6 @@
 #include "options.h"
 #include "types.h"
 
-// Consts ////////////////////////
-
 const int btscn64[64] =
 {
      0,  1, 48,  2, 57, 49, 28,  3,
@@ -19,8 +17,6 @@ const int btscn64[64] =
     25, 14, 19,  9, 13,  8,  7,  6
 };
 
-// Macroses //////////////////////
-
 #ifdef SSE
 #define BITSCAN(x)     (_BitScanForward64(&btscn_indx, x), btscn_indx )
 #define POPCNT(x)      ( __popcnt64(x) )
@@ -31,13 +27,9 @@ const int btscn64[64] =
                        + lut[((x) >> 16) & 0xFFFF] + lut[ (x)        & 0xFFFF] )
 #endif
 
-// Prototypes ////////////////////
-
 extern U64 rand64();
 extern void init_lut();
 extern void print64(U64);
-
-// Variables /////////////////////
 
 extern unsigned long btscn_indx;
 extern unsigned int lut[65536];

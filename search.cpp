@@ -245,7 +245,7 @@ int pvs(int alpha, int beta, int depth)
 #ifdef SEARCH_LMR
 		if (!in_pv && depth >= 2
         &&  !in_check && !gives_check
-        &&  !IS_CAP_OR_PROM(FLAGS(mv->move))
+        &&  !IS_CAP_OR_PROM(FLAGS(move))
         &&  legal >= 4 && !late_endgame)
 		{
 			reduced = true;

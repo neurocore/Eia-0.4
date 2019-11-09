@@ -51,7 +51,7 @@ int eval_b(int col)
     for (U64 bb = B->piece[BB + col]; bb; RLSB(bb))
     {
         int sq = BITSCAN(bb);
-        U64 att = BATT(sq, o) & ~B->occ[col];
+        U64 att = batt(sq, o) & ~B->occ[col];
         val += E->mob[BISHOP][POPCNT(att)];
     }
     return val;
@@ -64,7 +64,7 @@ int eval_r(int col)
     for (U64 bb = B->piece[BR + col]; bb; RLSB(bb))
     {
         int sq = BITSCAN(bb);
-        U64 att = RATT(sq, o) & ~B->occ[col];
+        U64 att = ratt(sq, o) & ~B->occ[col];
         val += E->mob[ROOK][POPCNT(att)];
     }
     return val;
@@ -77,7 +77,7 @@ int eval_q(int col)
     for (U64 bb = B->piece[BQ + col]; bb; RLSB(bb))
     {
         int sq = BITSCAN(bb);
-        U64 att = QATT(sq, o) & ~B->occ[col];
+        U64 att = qatt(sq, o) & ~B->occ[col];
         val += E->mob[QUEEN][POPCNT(att)];
     }
     return val;

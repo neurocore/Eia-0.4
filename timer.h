@@ -3,12 +3,8 @@
 
 #include <time.h>
 
-// Consts /////////////////////////////////
-
 #define DCLOCKS_SEC   (static_cast<double>(CLOCKS_PER_SEC))
 #define DCLOCKS_MSSEC (static_cast<double>(CLOCKS_PER_SEC) / 1000)
-
-// Classes ////////////////////////////////
 
 #ifdef _WIN32
 

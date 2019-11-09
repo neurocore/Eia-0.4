@@ -147,6 +147,7 @@ static U64 shift(U64 bb, Dir dir)
         case DIR_DR: return SHIFT_DR(bb);
         case DIR_DL: return SHIFT_DL(bb);
     }
+    return bb;
 }
 
 // Castlings ///////////////////////////////////////////

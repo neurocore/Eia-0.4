@@ -54,8 +54,6 @@ struct Search
 
 extern Search * S;
 
-// Prototypes //////////////////////
-
 extern void init_search();
 extern U64  perft_root(int depth);
 extern U64  perft(int depth);

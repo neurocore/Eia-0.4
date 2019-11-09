@@ -13,4 +13,5 @@
 #define INF           32767
 #define MATE          32000
 
+
 #endif // CONSTS_H
