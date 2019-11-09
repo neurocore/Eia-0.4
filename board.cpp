@@ -491,6 +491,67 @@ inline bool Board::in_check() // In current position
 	return is_attacked(BITSCAN(piece[BK + wtm]), occ[0] | occ[1]);
 }
 
+U64 Board::attackers_of(int sq, U64 o)
+{
+    U64 att = EMPTY;
+    att |= pieces[WP].att[sq] & piece[BP];
+    att |= pieces[BP].att[sq] & piece[WP];
+    att |= pieces[WK].att[sq] & (piece[BK] | piece[WK]);
+    att |= pieces[WN].att[sq] & (piece[BN] | piece[WN]);
+    att |= batt(sq, o) & (piece[BB] | piece[BQ] | piece[WB] | piece[WQ]);
+    att |= ratt(sq, o) & (piece[BR] | piece[BQ] | piece[WR] | piece[WQ]);
+    return att & o;
+}
+
+U64 Board::get_least_valuable_piece(U64 attadef, int col, int & p)
+{
+    for (p = BP + col; p <= BK + col; p += 2)
+    {
+        U64 subset = attadef & piece[p];
+        if (subset) return LSB(subset);
+    }
+    return EMPTY;
+}
+
+int Board::see(Move move)
+{
+    const int mat[PIECE_N] = {100, 100, 300, 300, 320, 320, 500, 500, 900, 900, 0, 0};
+
+    int gain[32];
+    int from = FROM(move);
+    int to = TO(move);
+    int p = sq[from];
+
+    U64 occupied = occ[0] | occ[1];
+    U64 may_xray = occupied & ~(piece[BN] | piece[WN] | piece[BK] | piece[WK]);
+    U64 from_set = BIT << from;
+    U64 attadef  = attackers_of(to, occupied);
+    gain[0]      = mat[to];
+
+    int col = wtm;
+    int d;
+    for (d = 0; from_set; d++)
+    {
+        gain[d] = mat[p] - gain[d - 1];
+        if (MAX(-gain[d - 1], gain[d]) < 0) break;
+
+        attadef  ^= from_set; // reset bit in set to traverse
+        occupied ^= from_set; // reset bit in temporary occupancy (for x-Rays)
+
+        if (from_set & may_xray)
+        {
+            attadef |= occupied & ratt(to, occupied) & (piece[BR ^ col] | piece[BQ ^ col]);
+            attadef |= occupied & batt(to, occupied) & (piece[BB ^ col] | piece[BQ ^ col]);
+        }
+
+        from_set = get_least_valuable_piece(attadef, d & 1, p);
+        col ^= 1;
+    }
+
+    while(--d > 0) gain[d - 1] = -MAX(-gain[d - 1], gain[d]);
+    return gain[0];
+}
+
 U64 Board::get_attack(int piece, int sq)
 {
     U64 occupied, att = EMPTY;

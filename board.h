@@ -7,6 +7,7 @@
 #include "movelist.h"
 #include "moves.h"
 #include "eval.h"
+#include "magics.h"
 
 using namespace std;
 
@@ -51,8 +52,10 @@ struct Board
     int  cnt_attacks(int ksq, U64 occupied, U64 captured, U64 & att);
     U64  get_attackers(int sq, int col);
     U64  get_attack(int piece, int sq);
+    U64  attackers_of(int sq, U64 o);
     U64  get_attacks_xray(int sq, U64 occupied, int col = 2);
     bool in_check();
+    U64  get_least_valuable_piece(U64 attadef, int col, int & p);
     int  see(Move move);
     bool insufficient_material();
     void update_killers(Move move, int depth);
@@ -110,6 +113,10 @@ inline void Board::remove(int square)
 }
 
 extern Board * B;
+
+extern U64 ratt(int sq, U64 o);
+extern U64 batt(int sq, U64 o);
+extern U64 qatt(int sq, U64 o);
 
 
 #endif // BOARD_H

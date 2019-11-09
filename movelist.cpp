@@ -131,7 +131,7 @@ void MoveList::set_values()
         int from = FROM(mv->move);
         int to = TO(mv->move);
 
-        if (IS_CAP_OR_PROM(flags))
+        if (IS_PROM(flags))
         {
             /**
              *  Actually, val = C + 100 * gaining - losing, where
@@ -147,8 +147,12 @@ void MoveList::set_values()
             int a = cost[B->sq[from]];  // attacker
             int v = cost[B->sq[to]];   // victim
 
-            if     (IS_PROM(flags)) mv->val = O_WIN_CAP + 100 * (p + v) - a;
-            else if (IS_CAP(flags)) mv->val = COMPARE(v, a, O_BAD_CAP, O_EQ_CAP, O_WIN_CAP) + 100 * v - a;
+            mv->val = O_WIN_CAP + 100 * (p + v) - a;
+        }
+        else if (IS_CAP(flags))
+        {
+            int see = B->see(mv->move);
+            mv->val = COMPARE(see, 0, O_BAD_CAP, O_EQ_CAP, O_WIN_CAP) + see;
         }
         else
         {
@@ -776,4 +780,3 @@ void MoveList::sort()
 {
     std::sort(first, last);
 }
-
