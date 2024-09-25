@@ -6,7 +6,7 @@ Chess engine. **Development has been suspended due to wrong design approach**
 - Project still contains parts of old code that was taken almost in its original form. In particular it is the most of macrofunctions that can be converted into inline functions easily. Control over execution flow is essential
 - For better readability and more convenience of making changes it was decided to stick more to OOP paradigm wherever it doesn't hurt performance much
 
-Work on engine Eia will be continued in the [version 0.5](https://github.com/neurocore/Eia-0.5)
+Work on engine Eia will be continued in the [Liquid v0.1](https://github.com/neurocore/Liquid-v0.1)
 
 # Features
 - Bitboards, magics
